@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulario Doppler</title>
+
+  <!-- Google Tag Manager -->
+  <script>(function (w, d, s, l, i) {
+      w[l] = w[l] || []; w[l].push({
+        'gtm.start':
+          new Date().getTime(), event: 'gtm.js'
+      }); var f = d.getElementsByTagName(s)[0],
+        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+          'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+    })(window, document, 'script', 'dataLayer', 'GTM-K5DTMCH');</script>
+  <!-- End Google Tag Manager -->
+
+  <!-- Doppler Form Generator -->
+  <script src="https://cdn.fromdoppler.com/formgenerator/latest/vendor.js?67493465"></script>
+  <link rel="stylesheet" href="https://cdn.fromdoppler.com/formgenerator/latest/styles.css?67493465" />
+
+  <script>
+    // Función para capturar datos del formulario y enviar a GTM/n8n
+    function captureFormData() {
+
+      // Simplemente nos "enganchamos" al evento submit, sin detenerlo.
+      const handleSubmit = function (e) {
+
+        const form = e.target;
+
+        // Capturar todos los campos del formulario
+        const formData = {};
+        const inputs = form.querySelectorAll('input, select, textarea');
+
+        inputs.forEach(input => {
+          const name = input.name || input.id || input.getAttribute('data-field');
+          const value = input.type === 'checkbox' ? input.checked : input.value;
+
+          if (name && value) {
+            formData[name] = value;
+          }
+        });
+
+        // Calcular LeadScoring basado en los campos
+        let leadScoring = 'D4'; // Valor por defecto
+
+        // Buscar el valor del campo Cargo (puede tener diferentes nombres)
+        const cargoValue = formData['Cargo'] || formData['cargo'] || formData['position'] || '';
+
+        // Buscar el valor del campo Area
+        const areaValue = formData['Area'] || formData['area'] || formData['department'] || '';
+
+        // Aplicar lógica de scoring
+        if (cargoValue === 'Director/Socio/Dueño') {
+          leadScoring = 'A1';
+        } else if (areaValue === 'Marketing/Comercialización') {
+          leadScoring = 'B2';
+        }
+
+        // Agregar LeadScoring al formData
+        formData['LeadScoring'] = leadScoring;
+
+        console.log('Lead Scoring calculado:', leadScoring);
+
+        // Enviar datos a Google Tag Manager (sincrónico, se ejecuta rápido)
+        if (window.dataLayer) {
+          window.dataLayer.push({
+            'event': 'dopplerFormSubmit',
+            'formId': 'PavPYqQLC1+k5ArEBTJldw==',
+            'formData': formData,
+            'timestamp': new Date().toISOString()
+          });
+
+          console.log('Datos enviados a GTM:', formData);
+        } else {
+          console.warn('dataLayer no está disponible. Asegurate de tener GTM instalado.');
+          console.log('Datos capturados:', formData);
+        }
+
+        // --- POST A N8N CON FETCH + KEEPALIVE ---
+        // Fire-and-forget. keepalive se asegura de que la petición se complete
+        // incluso si el script de Doppler navega o modifica la página.
+        fetch("https://develop-ceibo.app.n8n.cloud/webhook/form", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+          keepalive: true
+        }).catch(err => console.error("Error enviando a n8n:", err));
+
+        // No hacemos nada más. Dejamos que el evento de submit continúe
+        // su flujo normal para que el script de Doppler haga su trabajo.
+      };
+
+
+      // Esperar a que el formulario de Doppler se cargue
+      const checkFormInterval = setInterval(() => {
+        const form = document.querySelector('form[data-dp-form], form');
+
+        if (form) {
+          clearInterval(checkFormInterval);
+
+          // Interceptar el evento submit y usar la función nombrada
+          form.addEventListener('submit', handleSubmit);
+
+          console.log('Listener de formulario configurado correctamente');
+        }
+      }, 500); // Chequear cada 500ms hasta que el form esté disponible
+
+      // Timeout de seguridad (detener después de 10 segundos)
+      setTimeout(() => {
+        clearInterval(checkFormInterval);
+      }, 10000);
+    }
+
+
+    // Ejecutar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', captureFormData);
+    } else {
+      captureFormData();
+    }
+  </script>
+</head>
+
+<body>
+  <h1>Formulario de Suscripción</h1>
+
+  <!-- Método 1: Formulario embebido con script -->
+  <div data-dp-form="PavPYqQLC1%2bk5ArEBTJldw%3d%3d"></div>
+
+  <!-- Método 2: iframe (comentado por defecto, descomentá si preferís usar el iframe) -->
+  <!--
+    <iframe id='doppler_subscription' 
+            src='https://app2.fromdoppler.com/Lists/FormProcessing/PublishedForm?IdForm=PavPYqQLC1%2bk5ArEBTJldw%3d%3d' 
+            height='335' 
+            width='375' 
+            scrolling='yes' 
+            frameborder='no' 
+            style='overflow:scroll'>
+    </iframe>
+    -->
+</body>
+
+</html>
