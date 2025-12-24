@@ -15,7 +15,7 @@
         j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
           'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
     })(window, document, 'script', 'dataLayer', 'GTM-K5DTMCH');</script>
-  <!-- End Google Tag Manager -->
+  <!-- End Google Tag Manager -->
 
   <!-- Doppler Form Generator -->
   <script src="https://cdn.fromdoppler.com/formgenerator/latest/vendor.js?67493465"></script>
@@ -27,6 +27,70 @@
 
       // Simplemente nos "enganchamos" al evento submit, sin detenerlo.
       const handleSubmit = function (e) {
+
+        const estudiosScoring = {
+          "Secundario incompleto": 0,
+          "Secundario completo": 10,
+          "Terciario incompleto": 10,
+          "Terciario completo": 10,
+          "Universitario incompleto": 10,
+          "Universitario completo": 10,
+          "Posgrado/Maestría": 10,
+          "Doctorado/PhD": 10
+        }
+
+        const cargoScoring = {
+          "Director/Socio/Dueño": 10,
+          "Gerente/Subgerente": 10,
+          "Jefe/Coordinador": 5,
+          "Analista/Profesional": 4,
+          "Emprendedor/Independiente": 7,
+          "Estudiante": 0,
+          "Otro": 4
+        }
+
+        const industriasScoring = {
+          "Agro/Alimentos y Bebidas": 10,
+          "Automotriz/Autopartes": 10,
+          "Banca/Servicios Financieros": 10,
+          "Construcción/Real Estate": 10,
+          "Educación": 10,
+          "Energía/Minería/Petróleo & Gas": 10,
+          "Gobierno/Sector Público": 10,
+          "Manufactura": 10,
+          "Salud/Farmacéutica/Biotecnología": 10,
+          "Servicios Profesionales (Consultoría/Legal/Contable)": 9,
+          "Tecnología/Software/IT": 10,
+          "Telecomunicaciones": 10,
+          "Transporte/Logística": 10,
+          "Turismo/Hotelería/Gastronomía": 10,
+          "Otro": 4
+        }
+
+        const areaScoring = {
+          "Administración/Estrategia General": 10,
+          "Finanzas/Contabilidad": 10,
+          "Marketing/Comercialización": 10,
+          "Operaciones/Supply Chain/Producción": 10,
+          "Tecnología/Sistemas/Transformación Digital": 10,
+          "Recursos Humanos/Desarrollo Organizacional": 10,
+          "Legal/Compliance": 10,
+          "Salud/Ciencias de la Vida": 10,
+          "Educación/Académico/Investigación": 10,
+          "Emprendimiento/Innovación": 9,
+          "Otro": 4
+        }
+
+        const empleadosScoring = {
+          "1–10": 4,
+          "11–50": 9,
+          "51–200": 10,
+          "201–500": 10,
+          "501–1000": 10,
+          "1000+": 10
+        }
+
+
 
         const form = e.target;
 
@@ -43,41 +107,60 @@
           }
         });
 
-        // Calcular LeadScoring basado en los campos
-        let leadScoring = 'D4'; // Valor por defecto
+        console.log('formData ->' + JSON.stringify(formData))
 
-        // Buscar el valor del campo Cargo (puede tener diferentes nombres)
-        const cargoValue = formData['Cargo'] || formData['cargo'] || formData['position'] || '';
+        // --- INICIO CÁLCULO DE LEAD SCORING ---
+        let leadScoring = 0;
 
-        // Buscar el valor del campo Area
-        const areaValue = formData['Area'] || formData['area'] || formData['department'] || '';
+        // Mapeo de los campos del formulario a los objetos de scoring
+        // Estos nombres de campo (_dp_...) provienen de la configuración del formulario de Doppler
+        const scoringMap = {
+          '_dp_string219310': estudiosScoring,  // Estudios
+          '_dp_string18650': cargoScoring,     // Cargo
+          '_dp_string219311': industriasScoring, // Industria
+          '_dp_string35228': areaScoring,      // Área
+          '_dp_string219712': empleadosScoring  // Empleados
+        };
 
-        // Aplicar lógica de scoring
-        if (cargoValue === 'Director/Socio/Dueño') {
-          leadScoring = 'A1';
-        } else if (areaValue === 'Marketing/Comercialización') {
-          leadScoring = 'B2';
+        // Itera sobre el mapa de scoring y suma los puntos
+        for (const fieldName in scoringMap) {
+          const value = formData[fieldName];
+          const scoringObject = scoringMap[fieldName];
+
+          // Si el campo tiene un valor y ese valor existe en su tabla de scoring, suma los puntos.
+          if (value && scoringObject && scoringObject[value] !== undefined) {
+            leadScoring += scoringObject[value];
+          }
         }
 
         // Agregar LeadScoring al formData
-        formData['LeadScoring'] = leadScoring;
 
+        // Validaciones adicionales que anulan el scoring si se cumplen
+        const estudiosValue = formData['_dp_string219310'];
+        const cargoValue = formData['_dp_string18650'];
+
+        if (estudiosValue === "Secundario incompleto" || cargoValue === "Estudiante") {
+          leadScoring = 0;
+        }
+
+        formData['LeadScoring'] = leadScoring;
+        // --- FIN CÁLCULO DE LEAD SCORING ---
         console.log('Lead Scoring calculado:', leadScoring);
 
         // Enviar datos a Google Tag Manager (sincrónico, se ejecuta rápido)
-        if (window.dataLayer) {
-          window.dataLayer.push({
-            'event': 'dopplerFormSubmit',
-            'formId': 'PavPYqQLC1+k5ArEBTJldw==',
-            'formData': formData,
-            'timestamp': new Date().toISOString()
-          });
-
-          console.log('Datos enviados a GTM:', formData);
-        } else {
-          console.warn('dataLayer no está disponible. Asegurate de tener GTM instalado.');
-          console.log('Datos capturados:', formData);
-        }
+        /*  if (window.dataLayer) {
+           window.dataLayer.push({
+             'event': 'dopplerFormSubmit',
+             'formId': 'PavPYqQLC1+k5ArEBTJldw==',
+             'formData': formData,
+             'timestamp': new Date().toISOString()
+           });
+ 
+           console.log('Datos enviados a GTM:', formData);
+         } else {
+           console.warn('dataLayer no está disponible. Asegurate de tener GTM instalado.');
+           console.log('Datos capturados:', formData);
+         } */
 
         // --- POST A N8N CON FETCH + KEEPALIVE ---
         // Fire-and-forget. keepalive se asegura de que la petición se complete
