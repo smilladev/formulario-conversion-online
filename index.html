@@ -148,19 +148,19 @@
         console.log('Lead Scoring calculado:', leadScoring);
 
         // Enviar datos a Google Tag Manager (sincrónico, se ejecuta rápido)
-        /*  if (window.dataLayer) {
-           window.dataLayer.push({
-             'event': 'dopplerFormSubmit',
-             'formId': 'PavPYqQLC1+k5ArEBTJldw==',
-             'formData': formData,
-             'timestamp': new Date().toISOString()
-           });
- 
-           console.log('Datos enviados a GTM:', formData);
-         } else {
-           console.warn('dataLayer no está disponible. Asegurate de tener GTM instalado.');
-           console.log('Datos capturados:', formData);
-         } */
+        if (window.dataLayer) {
+          window.dataLayer.push({
+            'event': 'dopplerFormSubmit',
+            'formId': 'PavPYqQLC1+k5ArEBTJldw==',
+            'formData': formData,
+            'timestamp': new Date().toISOString()
+          });
+
+          console.log('Datos enviados a GTM:', formData);
+        } else {
+          console.warn('dataLayer no está disponible. Asegurate de tener GTM instalado.');
+          console.log('Datos capturados:', formData);
+        }
 
         // --- POST A N8N CON FETCH + KEEPALIVE ---
         // Fire-and-forget. keepalive se asegura de que la petición se complete
