@@ -64,7 +64,7 @@
           "Telecomunicaciones": 10,
           "Transporte/Logística": 10,
           "Turismo/Hotelería/Gastronomía": 10,
-          "Otro": 4
+          "Otro": 7
         }
 
         const areaScoring = {
@@ -78,7 +78,7 @@
           "Salud/Ciencias de la Vida": 10,
           "Educación/Académico/Investigación": 10,
           "Emprendimiento/Innovación": 9,
-          "Otro": 4
+          "Otro": 7
         }
 
         const empleadosScoring = {
@@ -90,7 +90,25 @@
           "1000+": 10
         }
 
+        const experienciaScoring = {
+          "1-4": 6,
+          "5-9": 10,
+          "10-15": 10,
+          "15+": 10
+        }
 
+        // Pesos de cada campo (total = 100%)
+        const PESOS = {
+          cargo: 50,
+          estudios: 6,
+          industria: 7,
+          area: 7,
+          empleados: 15,
+          experiencia: 15
+        };
+
+        // Valor base del programa para calcular Lead Value
+        const VALOR_BASE_PROGRAMA = 4800;
 
         const form = e.target;
 
@@ -109,43 +127,96 @@
 
         console.log('formData ->' + JSON.stringify(formData))
 
-        // --- INICIO CÁLCULO DE LEAD SCORING ---
-        let leadScoring = 0;
-
-        // Mapeo de los campos del formulario a los objetos de scoring
-        // Estos nombres de campo (_dp_...) provienen de la configuración del formulario de Doppler
-        const scoringMap = {
-          '_dp_string219310': estudiosScoring,  // Estudios
-          '_dp_string18650': cargoScoring,     // Cargo
-          '_dp_string219311': industriasScoring, // Industria
-          '_dp_string35228': areaScoring,      // Área
-          '_dp_string219712': empleadosScoring  // Empleados
-        };
-
-        // Itera sobre el mapa de scoring y suma los puntos
-        for (const fieldName in scoringMap) {
-          const value = formData[fieldName];
-          const scoringObject = scoringMap[fieldName];
-
-          // Si el campo tiene un valor y ese valor existe en su tabla de scoring, suma los puntos.
-          if (value && scoringObject && scoringObject[value] !== undefined) {
-            leadScoring += scoringObject[value];
-          }
+        // --- INICIO CÁLCULO DE LEAD SCORING Y LEAD VALUE ---
+        
+        // DEBUG: Mostrar valores capturados de cada campo
+        console.log('🔍 VALORES CAPTURADOS:');
+        console.log('  Estudios (_dp_string219310):', formData['_dp_string219310']);
+        console.log('  Cargo (_dp_string18650):', formData['_dp_string18650']);
+        console.log('  Industria (_dp_string219311):', formData['_dp_string219311']);
+        console.log('  Área (_dp_string35228):', formData['_dp_string35228']);
+        console.log('  Empleados (_dp_string219712):', formData['_dp_string219712']);
+        console.log('  Experiencia (_dp_string219713):', formData['_dp_string219713']);
+        
+        // Obtener scores individuales (0-10) de cada campo
+        const scoreEstudios = estudiosScoring[formData['_dp_string219310']] || 0;
+        const scoreCargo = cargoScoring[formData['_dp_string18650']] || 0;
+        const scoreIndustria = industriasScoring[formData['_dp_string219311']] || 0;
+        const scoreArea = areaScoring[formData['_dp_string35228']] || 0;
+        const scoreEmpleados = empleadosScoring[formData['_dp_string219712']] || 0;
+        
+        // Para Experiencia: si no existe el campo, usar score máximo (10) por defecto
+        let scoreExperiencia;
+        if (formData['_dp_string219713']) {
+          scoreExperiencia = experienciaScoring[formData['_dp_string219713']] || 0;
+        } else {
+          scoreExperiencia = 10; // Valor por defecto mientras se agrega el campo al formulario
+          console.warn('⚠️ Campo de Experiencia no encontrado. Usando score por defecto: 10');
         }
 
-        // Agregar LeadScoring al formData
+        // REGLA DE DESCALIFICACIÓN: Si cualquier campo tiene score = 0, el lead se descalifica
+        if (scoreEstudios === 0 || scoreCargo === 0 || scoreIndustria === 0 || 
+            scoreArea === 0 || scoreEmpleados === 0 || scoreExperiencia === 0) {
+          formData['LeadScore'] = 0;
+          formData['LeadValue'] = 0;
+          
+          console.log('========================================');
+          console.log('🚫 LEAD DESCALIFICADO');
+          console.log('========================================');
+          console.log('Scores por campo (0-10):');
+          console.log('  - Estudios:', scoreEstudios);
+          console.log('  - Cargo:', scoreCargo);
+          console.log('  - Industria:', scoreIndustria);
+          console.log('  - Área:', scoreArea);
+          console.log('  - Empleados:', scoreEmpleados);
+          console.log('  - Experiencia:', scoreExperiencia);
+          console.log('----------------------------------------');
+          console.log('RESULTADO FINAL:');
+          console.log('  Lead Score: 0%');
+          console.log('  Lead Value: $0');
+          console.log('========================================');
+        } else {
+          // Calcular Lead Score (%) aplicando pesos
+          const leadScore = 
+            (scoreCargo / 10) * PESOS.cargo +
+            (scoreEstudios / 10) * PESOS.estudios +
+            (scoreIndustria / 10) * PESOS.industria +
+            (scoreArea / 10) * PESOS.area +
+            (scoreEmpleados / 10) * PESOS.empleados +
+            (scoreExperiencia / 10) * PESOS.experiencia;
 
-        // Validaciones adicionales que anulan el scoring si se cumplen
-        const estudiosValue = formData['_dp_string219310'];
-        const cargoValue = formData['_dp_string18650'];
+          // Calcular Lead Value (USD)
+          const leadValue = Math.round((VALOR_BASE_PROGRAMA * (leadScore / 100)) * 100) / 100;
 
-        if (estudiosValue === "Secundario incompleto" || cargoValue === "Estudiante") {
-          leadScoring = 0;
+          formData['LeadScore'] = leadScore;
+          formData['LeadValue'] = leadValue;
+          
+          console.log('========================================');
+          console.log('✅ LEAD CALIFICADO');
+          console.log('========================================');
+          console.log('Scores individuales (0-10):');
+          console.log('  - Estudios:', scoreEstudios);
+          console.log('  - Cargo:', scoreCargo);
+          console.log('  - Industria:', scoreIndustria);
+          console.log('  - Área:', scoreArea);
+          console.log('  - Empleados:', scoreEmpleados);
+          console.log('  - Experiencia:', scoreExperiencia);
+          console.log('----------------------------------------');
+          console.log('Cálculo ponderado:');
+          console.log('  - Cargo (50%):', ((scoreCargo / 10) * PESOS.cargo).toFixed(2) + '%');
+          console.log('  - Estudios (7%):', ((scoreEstudios / 10) * PESOS.estudios).toFixed(2) + '%');
+          console.log('  - Industria (7%):', ((scoreIndustria / 10) * PESOS.industria).toFixed(2) + '%');
+          console.log('  - Área (7%):', ((scoreArea / 10) * PESOS.area).toFixed(2) + '%');
+          console.log('  - Empleados (15%):', ((scoreEmpleados / 10) * PESOS.empleados).toFixed(2) + '%');
+          console.log('  - Experiencia (15%):', ((scoreExperiencia / 10) * PESOS.experiencia).toFixed(2) + '%');
+          console.log('========================================');
+          console.log('📊 RESULTADO FINAL:');
+          console.log('  Lead Score: ' + leadScore.toFixed(2) + '%');
+          console.log('  Lead Value: $' + leadValue);
+          console.log('========================================');
         }
-
-        formData['LeadScoring'] = leadScoring;
-        // --- FIN CÁLCULO DE LEAD SCORING ---
-        console.log('Lead Scoring calculado:', leadScoring);
+        
+        // --- FIN CÁLCULO DE LEAD SCORING Y LEAD VALUE ---
 
         // Enviar datos a Google Tag Manager (sincrónico, se ejecuta rápido)
         if (window.dataLayer) {
