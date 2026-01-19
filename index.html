@@ -136,7 +136,7 @@
         console.log('  Industria (_dp_string219311):', formData['_dp_string219311']);
         console.log('  Área (_dp_string35228):', formData['_dp_string35228']);
         console.log('  Empleados (_dp_string219712):', formData['_dp_string219712']);
-        console.log('  Experiencia (_dp_string219713):', formData['_dp_string219713']);
+        console.log('  Experiencia (_dp_string221700):', formData['_dp_string221700']);
         
         // Obtener scores individuales (0-10) de cada campo
         const scoreEstudios = estudiosScoring[formData['_dp_string219310']] || 0;
@@ -144,15 +144,7 @@
         const scoreIndustria = industriasScoring[formData['_dp_string219311']] || 0;
         const scoreArea = areaScoring[formData['_dp_string35228']] || 0;
         const scoreEmpleados = empleadosScoring[formData['_dp_string219712']] || 0;
-        
-        // Para Experiencia: si no existe el campo, usar score máximo (10) por defecto
-        let scoreExperiencia;
-        if (formData['_dp_string219713']) {
-          scoreExperiencia = experienciaScoring[formData['_dp_string219713']] || 0;
-        } else {
-          scoreExperiencia = 10; // Valor por defecto mientras se agrega el campo al formulario
-          console.warn('⚠️ Campo de Experiencia no encontrado. Usando score por defecto: 10');
-        }
+        const scoreExperiencia = experienciaScoring[formData['_dp_string221700']] || 0;
 
         // REGLA DE DESCALIFICACIÓN: Si cualquier campo tiene score = 0, el lead se descalifica
         if (scoreEstudios === 0 || scoreCargo === 0 || scoreIndustria === 0 || 
