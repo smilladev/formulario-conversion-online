@@ -210,6 +210,32 @@
         
         // --- FIN CÁLCULO DE LEAD SCORING Y LEAD VALUE ---
 
+        // --- MAPEO DE PAÍS (ID → NOMBRE) ---
+        const paisMapping = {
+          "10": "Argentina",
+          "31": "Brasil",
+          "46": "Chile",
+          "186": "Paraguay",
+          "49": "Colombia",
+          "29": "Bolivia",
+          "63": "Ecuador",
+          "174": "Peru",
+          "238": "Venezuela"
+        };
+
+        // Buscar el campo del país y convertir ID a nombre
+        // El campo del país en Doppler suele ser _dp_country o similar
+        for (const key in formData) {
+          if (key.toLowerCase().includes('country') || key.toLowerCase().includes('pais')) {
+            const paisId = String(formData[key]);
+            if (paisMapping[paisId]) {
+              formData[key] = paisMapping[paisId];
+              console.log(`🌍 País mapeado: ID ${paisId} → ${paisMapping[paisId]}`);
+            }
+          }
+        }
+        // --- FIN MAPEO DE PAÍS ---
+
         // Enviar datos a Google Tag Manager (sincrónico, se ejecuta rápido)
         if (window.dataLayer) {
           window.dataLayer.push({
