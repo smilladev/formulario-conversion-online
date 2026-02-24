@@ -280,10 +280,13 @@
 
         // Enviar datos a Google Tag Manager (sincrónico, se ejecuta rápido)
         if (window.dataLayer) {
+          const utmParams = captureUTMParams();
+
           window.dataLayer.push({
             'event': 'dopplerFormSubmit',
             'formId': 'PavPYqQLC1+k5ArEBTJldw==',
             'formData': formData,
+            'utm_medium': utmParams.utm_medium || formData.utm_medium || '',
             'timestamp': new Date().toISOString()
           });
 
