@@ -70,17 +70,19 @@
           "Universitario incompleto": 10,
           "Universitario completo": 10,
           "Posgrado/Maestría": 10,
-          "Doctorado/PhD": 10
+          "Doctorado/PhD": 10,
+          "Doctorado/PhD.": 10
         }
 
         const cargoScoring = {
-          "Director/Socio/Dueño": 10,
-          "Gerente/Subgerente": 10,
-          "Jefe/Coordinador": 10,
-          "Analista/Profesional": 10,
-          "Emprendedor/Independiente": 10,
-          "Estudiante": 5,
-          "Otro": 5
+          "Director/Socio/Dueño": 20,
+          "Gerente/Subgerente": 20,
+          "Jefe/Coordinador": 20,
+          "Analista/Profesional": 20,
+          "Emprendedor/Independiente": 20,
+          "Estudiante": 10,
+          "Otro": 10,
+          "Otro.": 10
         }
 
         const industriasScoring = {
@@ -98,21 +100,23 @@
           "Telecomunicaciones": 10,
           "Transporte/Logística": 10,
           "Turismo/Hotelería/Gastronomía": 10,
-          "Otro": 10
+          "Otro": 10,
+          "Otro.": 10
         }
 
         const areaScoring = {
-          "Administración/Estrategia General": 7,
-          "Finanzas/Contabilidad": 5,
-          "Marketing/Comercialización": 10,
-          "Operaciones/Supply Chain/Producción": 7,
-          "Tecnología/Sistemas/Transformación Digital": 10,
-          "Recursos Humanos/Desarrollo Organizacional": 5,
-          "Legal/Compliance": 1,
-          "Salud/Ciencias de la Vida": 1,
-          "Educación/Académico/Investigación": 10,
-          "Emprendimiento/Innovación": 10,
-          "Otro": 1
+          "Administración/Estrategia General": 28,
+          "Finanzas/Contabilidad": 20,
+          "Marketing/Comercialización": 40,
+          "Operaciones/Supply Chain/Producción": 28,
+          "Tecnología/Sistemas/Transformación Digital": 40,
+          "Recursos Humanos/Desarrollo Organizacional": 20,
+          "Legal/Compliance": 4,
+          "Salud/Ciencias de la Vida": 4,
+          "Educación/Académico/Investigación": 40,
+          "Emprendimiento/Innovación": 40,
+          "Otro": 4,
+          "Otro.": 4
         }
 
         const empleadosScoring = {
@@ -131,17 +135,7 @@
           "15+": 10
         }
 
-        // Pesos de cada campo (total = 100%)
-        const PESOS = {
-          cargo: 50,
-          estudios: 6.67,
-          industria: 7,
-          area: 7,
-          empleados: 15,
-          experiencia: 15
-        };
-
-        // Valor base del programa para calcular Lead Value
+        const MAX_SCORE = 100;
         const VALOR_BASE_PROGRAMA = 600;
 
         const form = e.target;
@@ -172,7 +166,7 @@
         console.log('  Empleados (_dp_string219712):', formData['_dp_string219712']);
         console.log('  Experiencia (_dp_string221700):', formData['_dp_string221700']);
         
-        // Obtener scores individuales (0-10) de cada campo
+        // Obtener valores (columna azul) de cada campo
         const scoreEstudios = estudiosScoring[formData['_dp_string219310']] || 0;
         const scoreCargo = cargoScoring[formData['_dp_string18650']] || 0;
         const scoreIndustria = industriasScoring[formData['_dp_string219311']] || 0;
@@ -189,7 +183,7 @@
           console.log('========================================');
           console.log('🚫 LEAD DESCALIFICADO');
           console.log('========================================');
-          console.log('Scores por campo (0-10):');
+          console.log('Valores por campo (columna azul):');
           console.log('  - Estudios:', scoreEstudios);
           console.log('  - Cargo:', scoreCargo);
           console.log('  - Industria:', scoreIndustria);
@@ -202,17 +196,17 @@
           console.log('  Lead Value: $0');
           console.log('========================================');
         } else {
-          // Calcular Lead Score (%) aplicando pesos
-          const leadScore = 
-            (scoreCargo / 10) * PESOS.cargo +
-            (scoreEstudios / 10) * PESOS.estudios +
-            (scoreIndustria / 10) * PESOS.industria +
-            (scoreArea / 10) * PESOS.area +
-            (scoreEmpleados / 10) * PESOS.empleados +
-            (scoreExperiencia / 10) * PESOS.experiencia;
+          // Calcular Lead Score (%) sumando los valores de la columna azul
+          const leadScore =
+            scoreCargo +
+            scoreEstudios +
+            scoreIndustria +
+            scoreArea +
+            scoreEmpleados +
+            scoreExperiencia;
 
           // Calcular Lead Value (USD)
-          const leadValue = Math.round((VALOR_BASE_PROGRAMA * (leadScore / 100)) * 100) / 100;
+          const leadValue = Math.round((VALOR_BASE_PROGRAMA * (leadScore / MAX_SCORE)) * 100) / 100;
 
           formData['LeadScore'] = leadScore;
           formData['LeadValue'] = leadValue;
@@ -220,29 +214,13 @@
           console.log('========================================');
           console.log('✅ LEAD CALIFICADO');
           console.log('========================================');
-          console.log('Scores individuales (0-10):');
+          console.log('Valores individuales (columna azul):');
           console.log('  - Estudios:', scoreEstudios);
           console.log('  - Cargo:', scoreCargo);
           console.log('  - Industria:', scoreIndustria);
           console.log('  - Área:', scoreArea);
           console.log('  - Empleados:', scoreEmpleados);
           console.log('  - Experiencia:', scoreExperiencia);
-          console.log('----------------------------------------');
-          console.log('Cálculo ponderado:');
-          console.log(`  - Cargo (${PESOS.cargo}%):`, ((scoreCargo / 10) * PESOS.cargo).toFixed(2) + '%');
-          console.log(`  - Estudios (${PESOS.estudios}%):`, ((scoreEstudios / 10) * PESOS.estudios).toFixed(2) + '%');
-          console.log(`  - Industria (${PESOS.industria}%):`, ((scoreIndustria / 10) * PESOS.industria).toFixed(2) + '%');
-          console.log(`  - Área (${PESOS.area}%):`, ((scoreArea / 10) * PESOS.area).toFixed(2) + '%');
-          console.log(`  - Empleados (${PESOS.empleados}%):`, ((scoreEmpleados / 10) * PESOS.empleados).toFixed(2) + '%');
-          console.log(`  - Experiencia (${PESOS.experiencia}%):`, ((scoreExperiencia / 10) * PESOS.experiencia).toFixed(2) + '%');
-          console.log('----------------------------------------');
-          console.log('Detalle en USD por campo:');
-          console.log(`  - Cargo: $${(VALOR_BASE_PROGRAMA * ((scoreCargo / 10) * PESOS.cargo) / 100).toFixed(2)}`);
-          console.log(`  - Estudios: $${(VALOR_BASE_PROGRAMA * ((scoreEstudios / 10) * PESOS.estudios) / 100).toFixed(2)}`);
-          console.log(`  - Industria: $${(VALOR_BASE_PROGRAMA * ((scoreIndustria / 10) * PESOS.industria) / 100).toFixed(2)}`);
-          console.log(`  - Área: $${(VALOR_BASE_PROGRAMA * ((scoreArea / 10) * PESOS.area) / 100).toFixed(2)}`);
-          console.log(`  - Empleados: $${(VALOR_BASE_PROGRAMA * ((scoreEmpleados / 10) * PESOS.empleados) / 100).toFixed(2)}`);
-          console.log(`  - Experiencia: $${(VALOR_BASE_PROGRAMA * ((scoreExperiencia / 10) * PESOS.experiencia) / 100).toFixed(2)}`);
           console.log('========================================');
           console.log('📊 RESULTADO FINAL:');
           console.log('  Lead Score: ' + leadScore.toFixed(2) + '%');
