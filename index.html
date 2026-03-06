@@ -259,11 +259,18 @@
         // Enviar datos a Google Tag Manager (sincrónico, se ejecuta rápido)
         if (window.dataLayer) {
           const utmParams = captureUTMParams();
+          const leadScoreForGTM = Number(formData['LeadScore']);
+          const leadValueForGTM = Number(formData['LeadValue']);
+
+          formData['LeadScore'] = Number.isFinite(leadScoreForGTM) ? leadScoreForGTM : 0;
+          formData['LeadValue'] = Number.isFinite(leadValueForGTM) ? leadValueForGTM : 0;
 
           window.dataLayer.push({
             'event': 'dopplerFormSubmit',
             'formId': 'PavPYqQLC1+k5ArEBTJldw==',
             'formData': formData,
+            'leadscore': formData['LeadScore'],
+            'leadvalue': formData['LeadValue'],
             'utm_medium': utmParams.utm_medium || formData.utm_medium || '',
             'timestamp': new Date().toISOString()
           });
