@@ -284,12 +284,16 @@
         // --- POST A GOOGLE APPS SCRIPT CON FETCH + KEEPALIVE ---
         // Fire-and-forget. keepalive se asegura de que la petición se complete
         // incluso si el script de Doppler navega o modifica la página.
+        console.log("[DEBUG] Enviando datos a Google Apps Script...");
+        console.log("[DEBUG] formData:", JSON.stringify(formData, null, 2));
         fetch("https://script.google.com/macros/s/AKfycbwFTxIy3RPT3eCM2cJJOIKJEt512ptAX_7XzZCy0-Fpt-En-koO_b52CjxSR6dFHMsq/exec", {
           method: "POST",
           mode: "no-cors",
           body: JSON.stringify(formData),
           keepalive: true
-        }).catch(err => console.error("Error enviando a Google Sheets:", err));
+        }).then(() => {
+          console.log("[DEBUG] Fetch completado (no-cors: respuesta opaca, no se puede leer el status).");
+        }).catch(err => console.error("[DEBUG] Error enviando a Google Sheets:", err));
 
         // No hacemos nada más. Dejamos que el evento de submit continúe
         // su flujo normal para que el script de Doppler haga su trabajo.
