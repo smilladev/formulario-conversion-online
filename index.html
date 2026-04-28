@@ -22,49 +22,100 @@
   <link rel="stylesheet" href="https://cdn.fromdoppler.com/formgenerator/latest/styles.css?67493465" />
 
   <script>
-    // Función para extraer parámetros UTM de la URL
-    function captureUTMParams() {
-      const urlParams = new URLSearchParams(window.location.search);
-      
-      const utmParams = {
-        'utm': urlParams.get('utm') || '',
-        'utm_source': urlParams.get('utm_source') || '',
-        'utm_medium': urlParams.get('utm_medium') || '',
-        'utm_campaign': urlParams.get('utm_campaign') || '',
-        'utm_term': urlParams.get('utm_term') || '',
-        'utm_content': urlParams.get('utm_content') || ''
+    // ============================================================
+    // 1. PERSISTENCIA DE CLICK IDs Y UTMs EN sessionStorage
+    //    Se ejecuta al cargar la página, antes de cualquier
+    //    redirección interna que Doppler pueda hacer.
+    // ============================================================
+    (function () {
+      const p = new URLSearchParams(window.location.search);
+      ['utm', 'utm_source', 'utm_medium', 'utm_campaign',
+        'utm_term', 'utm_content', 'gclid', 'fbclid'].forEach(function (key) {
+        const val = p.get(key);
+        if (val) sessionStorage.setItem(key, val);
+      });
+    })();
+
+    // ============================================================
+    // 2. CAPTURA DE PARÁMETROS DE URL + sessionStorage como fallback
+    // ============================================================
+    function captureClickParams() {
+      const p = new URLSearchParams(window.location.search);
+      return {
+        utm:          p.get('utm')          || sessionStorage.getItem('utm')          || '',
+        utm_source:   p.get('utm_source')   || sessionStorage.getItem('utm_source')   || '',
+        utm_medium:   p.get('utm_medium')   || sessionStorage.getItem('utm_medium')   || '',
+        utm_campaign: p.get('utm_campaign') || sessionStorage.getItem('utm_campaign') || '',
+        utm_term:     p.get('utm_term')     || sessionStorage.getItem('utm_term')     || '',
+        utm_content:  p.get('utm_content')  || sessionStorage.getItem('utm_content')  || '',
+        gclid:        p.get('gclid')        || sessionStorage.getItem('gclid')        || '',
+        fbclid:       p.get('fbclid')       || sessionStorage.getItem('fbclid')       || ''
       };
-      
-      return utmParams;
     }
 
-    // Función para inyectar campos UTM como inputs hidden en el formulario
-    function injectUTMFields(form) {
-      const utmParams = captureUTMParams();
-      
-      // Crear campos hidden para cada parámetro UTM que tenga valor
-      Object.keys(utmParams).forEach(key => {
-        if (utmParams[key]) {
+    // ============================================================
+    // 3. HASHING SHA-256 PARA CONVERSIONES MEJORADAS
+    //    Requerido por Google Enhanced Conversions y Meta CAPI.
+    //    Nota: crypto.subtle solo funciona sobre HTTPS.
+    // ============================================================
+
+    /** Normaliza un string: minúsculas + trim (requerimiento Google/Meta). */
+    function normalizeString(str) {
+      return (str || '').toLowerCase().trim();
+    }
+
+    /**
+     * Normaliza un teléfono a formato E.164: conserva solo dígitos y el '+' inicial.
+     * IMPORTANTE: el usuario debe ingresar el código de país (ej: +5491156789012).
+     * Sin código de país Meta no puede hacer match del lead.
+     */
+    function normalizePhone(phone) {
+      return (phone || '').trim().replace(/[^\d+]/g, '');
+    }
+
+    /** Genera el hash SHA-256 (hex string) de un valor normalizado. */
+    async function hashSHA256(value) {
+      if (!value) return '';
+      const encoded = new TextEncoder().encode(normalizeString(value));
+      const buffer  = await crypto.subtle.digest('SHA-256', encoded);
+      return Array.from(new Uint8Array(buffer))
+        .map(function (b) { return b.toString(16).padStart(2, '0'); })
+        .join('');
+    }
+
+    // ============================================================
+    // 4. INYECCIÓN DE CAMPOS HIDDEN (UTMs + Click IDs)
+    //    Los valores se envían a Doppler/CRM junto con el formulario.
+    // ============================================================
+    function injectClickParamFields(form) {
+      const params = captureClickParams();
+      Object.keys(params).forEach(function (key) {
+        // No duplicar si el campo ya fue inyectado
+        if (params[key] && !form.querySelector('input[name="' + key + '"]')) {
           const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = key;
-          input.value = utmParams[key];
+          input.type  = 'hidden';
+          input.name  = key;
+          input.value = params[key];
           form.appendChild(input);
         }
       });
-      
-      console.log('✅ Campos UTM inyectados:', utmParams);
+      console.log('✅ Click params inyectados:', params);
     }
 
-    // Función para capturar datos del formulario y enviar a GTM/n8n
+    // ============================================================
+    // 5. LÓGICA PRINCIPAL: SCORING + HASHING + DATA LAYER
+    // ============================================================
     function captureFormData() {
 
-      // Simplemente nos "enganchamos" al evento submit, sin detenerlo.
-      const handleSubmit = function (e) {
+      // handleSubmit es async para poder awaitar el hashing SHA-256
+      const handleSubmit = async function (e) {
 
+        // ── LEAD SCORING ────────────────────────────────────────
+
+        // Scores 0-10 por dimensión. Score 0 = lead descalificado.
         const estudiosScoring = {
           "Secundario incompleto": 0,
-          "Secundario completo": 0,
+          "Secundario completo": 10,
           "Terciario incompleto": 10,
           "Terciario completo": 10,
           "Universitario incompleto": 10,
@@ -72,18 +123,18 @@
           "Posgrado/Maestría": 10,
           "Doctorado/PhD": 10,
           "Doctorado/PhD.": 10
-        }
+        };
 
         const cargoScoring = {
-          "Director/Socio/Dueño": 20,
-          "Gerente/Subgerente": 20,
-          "Jefe/Coordinador": 20,
-          "Analista/Profesional": 20,
-          "Emprendedor/Independiente": 20,
-          "Estudiante": 10,
-          "Otro": 10,
-          "Otro.": 10
-        }
+          "Director/Socio/Dueño": 10,
+          "Gerente/Subgerente": 10,
+          "Jefe/Coordinador": 5,
+          "Analista/Profesional": 8,
+          "Emprendedor/Independiente": 7,
+          "Estudiante": 4,
+          "Otro": 3,
+          "Otro.": 3
+        };
 
         const industriasScoring = {
           "Agro/Alimentos y Bebidas": 10,
@@ -95,69 +146,69 @@
           "Gobierno/Sector Público": 10,
           "Manufactura": 10,
           "Salud/Farmacéutica/Biotecnología": 10,
-          "Servicios Profesionales (Consultoría/Legal/Contable)": 10,
+          "Servicios Profesionales (Consultoría/Legal/Contable)": 9,
           "Tecnología/Software/IT": 10,
           "Telecomunicaciones": 10,
           "Transporte/Logística": 10,
           "Turismo/Hotelería/Gastronomía": 10,
-          "Otro": 10,
-          "Otro.": 10
-        }
+          "Otro": 7,
+          "Otro.": 7
+        };
 
         const areaScoring = {
-          "Administración/Estrategia General": 28,
-          "Finanzas/Contabilidad": 20,
-          "Marketing/Comercialización": 40,
-          "Operaciones/Supply Chain/Producción": 28,
-          "Tecnología/Sistemas/Transformación Digital": 40,
-          "Recursos Humanos/Desarrollo Organizacional": 20,
-          "Legal/Compliance": 4,
-          "Salud/Ciencias de la Vida": 4,
-          "Educación/Académico/Investigación": 40,
-          "Emprendimiento/Innovación": 40,
-          "Otro": 4,
-          "Otro.": 4
-        }
+          "Administración/Estrategia General": 10,
+          "Finanzas/Contabilidad": 10,
+          "Marketing/Comercialización": 10,
+          "Operaciones/Supply Chain/Producción": 10,
+          "Tecnología/Sistemas/Transformación Digital": 10,
+          "Recursos Humanos/Desarrollo Organizacional": 10,
+          "Legal/Compliance": 10,
+          "Salud/Ciencias de la Vida": 10,
+          "Educación/Académico/Investigación": 10,
+          "Emprendimiento/Innovación": 9,
+          "Otro": 7,
+          "Otro.": 7
+        };
 
         const empleadosScoring = {
-          "1–10": 10,
-          "11–50": 10,
+          "1–10": 4,
+          "11–50": 9,
           "51–200": 10,
           "201–500": 10,
           "501–1000": 10,
           "1000+": 10
-        }
+        };
 
         const experienciaScoring = {
-          "1-4": 10,
+          "1-4": 6,
           "5-9": 10,
           "10-15": 10,
           "15+": 10
-        }
+        };
 
-        const MAX_SCORE = 100;
-        const VALOR_BASE_PROGRAMA = 600;
+        // Pesos por dimensión (pts → score %, usd → lead value)
+        const PESOS = {
+          estudios:    { pts: 6.67,  usd: 75     },
+          cargo:       { pts: 50,    usd: 566    },
+          industria:   { pts: 6.67,  usd: 75.4  },
+          area:        { pts: 6.67,  usd: 75.4  },
+          empleados:   { pts: 15,    usd: 169.65 },
+          experiencia: { pts: 15,    usd: 169.65 }
+        };
 
         const form = e.target;
 
         // Capturar todos los campos del formulario
         const formData = {};
-        const inputs = form.querySelectorAll('input, select, textarea');
-
-        inputs.forEach(input => {
-          const name = input.name || input.id || input.getAttribute('data-field');
+        form.querySelectorAll('input, select, textarea').forEach(function (input) {
+          const name  = input.name || input.id || input.getAttribute('data-field');
           const value = input.type === 'checkbox' ? input.checked : input.value;
-
-          if (name && value) {
-            formData[name] = value;
-          }
+          if (name && value) formData[name] = value;
         });
 
-        console.log('formData ->' + JSON.stringify(formData))
+        console.log('formData ->', JSON.stringify(formData));
 
-        // --- INICIO CÁLCULO DE LEAD SCORING Y LEAD VALUE ---
-        
-        // DEBUG: Mostrar valores capturados de cada campo
+        // DEBUG
         console.log('🔍 VALORES CAPTURADOS:');
         console.log('  Estudios (_dp_string219310):', formData['_dp_string219310']);
         console.log('  Cargo (_dp_string18650):', formData['_dp_string18650']);
@@ -165,164 +216,177 @@
         console.log('  Área (_dp_string35228):', formData['_dp_string35228']);
         console.log('  Empleados (_dp_string219712):', formData['_dp_string219712']);
         console.log('  Experiencia (_dp_string221700):', formData['_dp_string221700']);
-        
-        // Obtener valores (columna azul) de cada campo
-        const scoreEstudios = estudiosScoring[formData['_dp_string219310']] || 0;
-        const scoreCargo = cargoScoring[formData['_dp_string18650']] || 0;
-        const scoreIndustria = industriasScoring[formData['_dp_string219311']] || 0;
-        const scoreArea = areaScoring[formData['_dp_string35228']] || 0;
-        const scoreEmpleados = empleadosScoring[formData['_dp_string219712']] || 0;
-        const scoreExperiencia = experienciaScoring[formData['_dp_string221700']] || 0;
 
-        // REGLA DE DESCALIFICACIÓN: Si cualquier campo tiene score = 0, el lead se descalifica
-        if (scoreEstudios === 0 || scoreCargo === 0 || scoreIndustria === 0 || 
-            scoreArea === 0 || scoreEmpleados === 0 || scoreExperiencia === 0) {
+        // Scores individuales (nullish coalescing: undefined → 0, no confunde con score=0 explícito)
+        const scoreEstudios    = estudiosScoring[formData['_dp_string219310']]    ?? 0;
+        const scoreCargo       = cargoScoring[formData['_dp_string18650']]        ?? 0;
+        const scoreIndustria   = industriasScoring[formData['_dp_string219311']]  ?? 0;
+        const scoreArea        = areaScoring[formData['_dp_string35228']]         ?? 0;
+        const scoreEmpleados   = empleadosScoring[formData['_dp_string219712']]   ?? 0;
+        const scoreExperiencia = experienciaScoring[formData['_dp_string221700']] ?? 0;
+
+        // Descalificación si algún score es 0
+        if ([scoreEstudios, scoreCargo, scoreIndustria,
+             scoreArea, scoreEmpleados, scoreExperiencia].some(function (s) { return s === 0; })) {
           formData['LeadScore'] = 0;
           formData['LeadValue'] = 0;
-          
           console.log('========================================');
           console.log('🚫 LEAD DESCALIFICADO');
-          console.log('========================================');
-          console.log('Valores por campo (columna azul):');
-          console.log('  - Estudios:', scoreEstudios);
-          console.log('  - Cargo:', scoreCargo);
-          console.log('  - Industria:', scoreIndustria);
-          console.log('  - Área:', scoreArea);
-          console.log('  - Empleados:', scoreEmpleados);
-          console.log('  - Experiencia:', scoreExperiencia);
-          console.log('----------------------------------------');
-          console.log('RESULTADO FINAL:');
-          console.log('  Lead Score: 0%');
-          console.log('  Lead Value: $0');
+          console.log('  Estudios:', scoreEstudios, '| Cargo:', scoreCargo,
+                      '| Industria:', scoreIndustria, '| Área:', scoreArea,
+                      '| Empleados:', scoreEmpleados, '| Experiencia:', scoreExperiencia);
           console.log('========================================');
         } else {
-          // Calcular Lead Score (%) sumando los valores de la columna azul
-          const leadScore =
-            scoreCargo +
-            scoreEstudios +
-            scoreIndustria +
-            scoreArea +
-            scoreEmpleados +
-            scoreExperiencia;
+          const leadScore = Math.round((
+            (scoreEstudios    / 10 * PESOS.estudios.pts)   +
+            (scoreCargo       / 10 * PESOS.cargo.pts)      +
+            (scoreIndustria   / 10 * PESOS.industria.pts)  +
+            (scoreArea        / 10 * PESOS.area.pts)       +
+            (scoreEmpleados   / 10 * PESOS.empleados.pts)  +
+            (scoreExperiencia / 10 * PESOS.experiencia.pts)
+          ) * 100) / 100;
 
-          // Calcular Lead Value (USD)
-          const leadValue = Math.round((VALOR_BASE_PROGRAMA * (leadScore / MAX_SCORE)) * 100) / 100;
+          const leadValue = Math.round((
+            (scoreEstudios    / 10 * PESOS.estudios.usd)   +
+            (scoreCargo       / 10 * PESOS.cargo.usd)      +
+            (scoreIndustria   / 10 * PESOS.industria.usd)  +
+            (scoreArea        / 10 * PESOS.area.usd)       +
+            (scoreEmpleados   / 10 * PESOS.empleados.usd)  +
+            (scoreExperiencia / 10 * PESOS.experiencia.usd)
+          ) * 100) / 100;
 
           formData['LeadScore'] = leadScore;
           formData['LeadValue'] = leadValue;
-          
           console.log('========================================');
           console.log('✅ LEAD CALIFICADO');
-          console.log('========================================');
-          console.log('Valores individuales (columna azul):');
-          console.log('  - Estudios:', scoreEstudios);
-          console.log('  - Cargo:', scoreCargo);
-          console.log('  - Industria:', scoreIndustria);
-          console.log('  - Área:', scoreArea);
-          console.log('  - Empleados:', scoreEmpleados);
-          console.log('  - Experiencia:', scoreExperiencia);
-          console.log('========================================');
-          console.log('📊 RESULTADO FINAL:');
-          console.log('  Lead Score: ' + leadScore.toFixed(2) + '%');
-          console.log('  Lead Value: $' + leadValue);
+          console.log('  Score:', leadScore + '%', '| Value: $' + leadValue);
           console.log('========================================');
         }
-        
-        // --- FIN CÁLCULO DE LEAD SCORING Y LEAD VALUE ---
 
-        // --- MAPEO DE PAÍS (ID → NOMBRE) ---
+        // ── MAPEO DE PAÍS (ID → NOMBRE) ─────────────────────────
         const paisMapping = {
-          "10": "Argentina",
-          "31": "Brasil",
-          "46": "Chile",
-          "186": "Paraguay",
-          "49": "Colombia",
-          "29": "Bolivia",
-          "63": "Ecuador",
-          "174": "Peru",
-          "238": "Venezuela"
+          "10": "Argentina", "31": "Brasil",   "46": "Chile",
+          "186": "Paraguay", "49": "Colombia", "29": "Bolivia",
+          "63": "Ecuador",   "174": "Peru",    "238": "Venezuela"
         };
-
-        // Buscar el campo del país y convertir ID a nombre
-        // El campo del país en Doppler suele ser _dp_country o similar
         for (const key in formData) {
           if (key.toLowerCase().includes('country') || key.toLowerCase().includes('pais')) {
-            const paisId = String(formData[key]);
-            if (paisMapping[paisId]) {
-              formData[key] = paisMapping[paisId];
-              console.log(`🌍 País mapeado: ID ${paisId} → ${paisMapping[paisId]}`);
+            const id = String(formData[key]);
+            if (paisMapping[id]) {
+              formData[key] = paisMapping[id];
+              console.log('🌍 País mapeado: ID ' + id + ' → ' + paisMapping[id]);
             }
           }
         }
-        // --- FIN MAPEO DE PAÍS ---
 
-        // Enviar datos a Google Tag Manager (sincrónico, se ejecuta rápido)
+        // ── HASHING SHA-256 (Conversiones Mejoradas Google + Meta CAPI) ──
+
+        // Buscar email y teléfono usando atributos de tipo estándar
+        const emailField = form.querySelector('input[type="email"]');
+        const phoneField = form.querySelector('input[type="tel"]');
+
+        const emailRaw = (emailField ? emailField.value.trim() : '') ||
+                         formData['EMAIL'] || formData['email'] || '';
+        const phoneRaw = (phoneField ? phoneField.value.trim() : '') ||
+                         formData['PHONE'] || formData['phone'] || '';
+
+        const phoneNorm = normalizePhone(phoneRaw);
+
+        // Advertencia de formato E.164 — crítico para match de Meta
+        if (phoneNorm && !/^\+\d{7,15}$/.test(phoneNorm)) {
+          console.warn('⚠️ Teléfono sin formato E.164 (esperado: +5491156789012).',
+                       'Valor capturado:', phoneNorm,
+                       '— Meta no podrá hacer match de este lead.');
+        }
+
+        // Hash en paralelo (rápido, no bloquea el submit de Doppler)
+        const [hashedEmail, hashedPhone] = await Promise.all([
+          hashSHA256(emailRaw),
+          hashSHA256(phoneNorm)
+        ]);
+
+        console.log('🔐 Email hash (SHA-256):', hashedEmail || '(vacío)');
+        console.log('🔐 Phone hash (SHA-256):', hashedPhone || '(vacío)');
+
+        // ── DATA LAYER ───────────────────────────────────────────
+        const clickParams = captureClickParams();
+
         if (window.dataLayer) {
-          const utmParams = captureUTMParams();
-          const leadScoreForGTM = Number(formData['LeadScore']);
-          const leadValueForGTM = Number(formData['LeadValue']);
-
-          formData['LeadScore'] = Number.isFinite(leadScoreForGTM) ? leadScoreForGTM : 0;
-          formData['LeadValue'] = Number.isFinite(leadValueForGTM) ? leadValueForGTM : 0;
-
+          // EVENTO 1 — form_submission
+          // Usar este evento en GTM para disparar:
+          //   · Conversión de Google Ads con Enhanced Conversions
+          //   · Meta Pixel con Conversions API (CAPI)
           window.dataLayer.push({
-            'event': 'dopplerFormSubmit',
-            'formId': 'PavPYqQLC1+k5ArEBTJldw==',
-            'formData': formData,
-            'leadscore': formData['LeadScore'],
-            'leadvalue': formData['LeadValue'],
-            'utm_medium': utmParams.utm_medium || formData.utm_medium || '',
-            'timestamp': new Date().toISOString()
+            event:                'form_submission',
+            // Datos hasheados — Google Enhanced Conversions
+            sha256_email_address: hashedEmail,
+            sha256_phone_number:  hashedPhone,
+            // Datos hasheados — Meta CAPI
+            em:                   hashedEmail,
+            ph:                   hashedPhone,
+            // Datos en texto plano
+            first_name:           normalizeString(formData['FIRSTNAME'] || formData['_dp_name'] || ''),
+            city:                 normalizeString(formData['CITY'] || formData['ciudad'] || ''),
+            // Click IDs — críticos para atribución
+            gclid:                clickParams.gclid,
+            fbclid:               clickParams.fbclid,
+            // UTMs
+            utm_source:           clickParams.utm_source,
+            utm_medium:           clickParams.utm_medium,
+            utm_campaign:         clickParams.utm_campaign,
+            utm_term:             clickParams.utm_term,
+            utm_content:          clickParams.utm_content,
+            // Lead Scoring
+            lead_score:           Number(formData['LeadScore']),
+            lead_value:           Number(formData['LeadValue']),
+            timestamp:            new Date().toISOString()
           });
+          console.log('🎯 [form_submission] enviado a GTM con datos hasheados');
 
-          console.log('Datos enviados a GTM:', formData);
+          // EVENTO 2 — dopplerFormSubmit (mantener compatibilidad con triggers GTM existentes)
+          window.dataLayer.push({
+            event:      'dopplerFormSubmit',
+            formId:     'PavPYqQLC1+k5ArEBTJldw==',
+            formData:   formData,
+            leadscore:  Number(formData['LeadScore']),
+            leadvalue:  Number(formData['LeadValue']),
+            utm_medium: clickParams.utm_medium,
+            timestamp:  new Date().toISOString()
+          });
+          console.log('📤 [dopplerFormSubmit] enviado a GTM');
         } else {
-          console.warn('dataLayer no está disponible. Asegurate de tener GTM instalado.');
-          console.log('Datos capturados:', formData);
+          console.warn('dataLayer no disponible. ¿GTM está instalado?');
         }
 
-        // --- POST A GOOGLE APPS SCRIPT CON FETCH + KEEPALIVE ---
-        // Fire-and-forget. keepalive se asegura de que la petición se complete
-        // incluso si el script de Doppler navega o modifica la página.
-        console.log("[DEBUG] Enviando datos a Google Apps Script...");
-        console.log("[DEBUG] formData:", JSON.stringify(formData, null, 2));
-        fetch("https://script.google.com/macros/s/AKfycbz2PabT1TwCXnOrpit-lND9p_cRzyqHM1o5Qps0LLi7rKh7E2hGZ3qtDvgVoDepy9Gn/exec", {
-          method: "POST",
-          mode: "no-cors",
-          body: JSON.stringify(formData),
-          keepalive: true
-        }).then(() => {
-          console.log("[DEBUG] Fetch completado (no-cors: respuesta opaca, no se puede leer el status).");
-        }).catch(err => console.error("[DEBUG] Error enviando a Google Sheets:", err));
+        // ── POST A GOOGLE APPS SCRIPT (fire-and-forget) ──────────
+        // keepalive asegura que la petición se complete aunque
+        // Doppler navegue a una página de agradecimiento.
+        fetch(
+          'https://script.google.com/macros/s/AKfycbz2PabT1TwCXnOrpit-lND9p_cRzyqHM1o5Qps0LLi7rKh7E2hGZ3qtDvgVoDepy9Gn/exec',
+          {
+            method:    'POST',
+            mode:      'no-cors',
+            body:      JSON.stringify(formData),
+            keepalive: true
+          }
+        ).catch(function (err) { console.error('[Sheets] Error:', err); });
 
-        // No hacemos nada más. Dejamos que el evento de submit continúe
-        // su flujo normal para que el script de Doppler haga su trabajo.
-      };
+      }; // end handleSubmit
 
-
-      // Esperar a que el formulario de Doppler se cargue
-      const checkFormInterval = setInterval(() => {
+      // Esperar a que Doppler inyecte el formulario en el DOM
+      const checkInterval = setInterval(function () {
         const form = document.querySelector('form[data-dp-form], form');
-
         if (form) {
-          clearInterval(checkFormInterval);
-
-          // Inyectar campos UTM antes de interceptar el submit
-          injectUTMFields(form);
-
-          // Interceptar el evento submit y usar la función nombrada
+          clearInterval(checkInterval);
+          injectClickParamFields(form);
           form.addEventListener('submit', handleSubmit);
-
-          console.log('Listener de formulario configurado correctamente');
+          console.log('✅ Listener de formulario configurado');
         }
-      }, 500); // Chequear cada 500ms hasta que el form esté disponible
+      }, 500);
 
-      // Timeout de seguridad (detener después de 10 segundos)
-      setTimeout(() => {
-        clearInterval(checkFormInterval);
-      }, 10000);
+      // Timeout de seguridad (detener polling tras 10 segundos)
+      setTimeout(function () { clearInterval(checkInterval); }, 10000);
     }
-
 
     // Ejecutar cuando el DOM esté listo
     if (document.readyState === 'loading') {
