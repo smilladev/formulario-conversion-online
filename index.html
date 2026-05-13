@@ -126,48 +126,84 @@
         };
 
         const cargoScoring = {
-          "Director/Socio/Dueño": 10,
-          "Gerente/Subgerente": 10,
-          "Jefe/Coordinador": 5,
-          "Analista/Profesional": 8,
-          "Emprendedor/Independiente": 7,
-          "Estudiante": 4,
-          "Otro": 3,
-          "Otro.": 3
+          "Académico": 9,
+          "Analista": 9,
+          "Asesor/Consultor": 9,
+          "Asistente / Administrativo": 7,
+          "Auditor": 6,
+          "Coordinador / Supervisor": 7,
+          "Desocupado": 9,
+          "Director de Área": 10,
+          "Director en Directorio": 10,
+          "Director General": 10,
+          "Dueño / Socio": 10,
+          "Ejecutivo Comercial / KAM / Ventas": 7,
+          "Emprendedor": 9,
+          "Especialista (en relación de dependencia: abogado, ingeniero, programador, diseñador...)": 9,
+          "Funcionario Público": 10,
+          "Gerente de Área": 10,
+          "Gerente General / CEO": 10,
+          "Jefe de Área / Departamento": 6,
+          "Presidente": 10,
+          "Profesional Independiente": 10,
+          "Subgte. Area": 10,
+          "Subgte. General": 10,
+          "Vicepresidente": 10
         };
 
         const industriasScoring = {
-          "Agro/Alimentos y Bebidas": 10,
-          "Automotriz/Autopartes": 10,
-          "Banca/Servicios Financieros": 10,
-          "Construcción/Real Estate": 10,
-          "Educación": 10,
-          "Energía/Minería/Petróleo & Gas": 10,
-          "Gobierno/Sector Público": 10,
+          "Agricultura y Ganadería": 10,
+          "Alimentos y Bebidas": 10,
+          "Arte, Entretenimiento, Deportes y Recreación": 10,
+          "Automotriz": 10,
+          "Comercio Mayorista y Distribución": 10,
+          "Comercio minorista y Retail": 10,
+          "Construcción y Materiales": 10,
+          "Educación y Formación": 9,
+          "Electrónica, equipos informáticos y electrodomésticos": 10,
+          "Energía y Recursos Naturales": 10,
+          "Finanzas, servicios financieros y bancarios": 10,
+          "Industrias Creativas y Diseño": 10,
+          "Logística y Transportes de bienes": 10,
           "Manufactura": 10,
-          "Salud/Farmacéutica/Biotecnología": 10,
-          "Servicios Profesionales (Consultoría/Legal/Contable)": 9,
-          "Tecnología/Software/IT": 10,
-          "Telecomunicaciones": 10,
-          "Transporte/Logística": 10,
-          "Turismo/Hotelería/Gastronomía": 10,
-          "Otro": 7,
-          "Otro.": 7
+          "Maquinaria y equipos industriales": 10,
+          "Medios de Comunicación, Editoriales, Imprenta": 9,
+          "ONGs": 10,
+          "Pesca y Acuicultura": 10,
+          "Química, farmacología y Biotecnología": 10,
+          "Salud, Servicios Médicos y Bienestar": 10,
+          "Seguros": 10,
+          "Servicios": 10,
+          "Servicios de Consultoría y Asesoría": 10,
+          "Servicios Profesionales y Empresariales": 10,
+          "Servicios Públicos y Gobierno": 10,
+          "Tecnología y Comunicaciones": 10,
+          "Textil y Moda": 10,
+          "Transporte de pasajeros": 10,
+          "Turismo y hotelería": 10
         };
 
         const areaScoring = {
-          "Administración/Estrategia General": 10,
-          "Finanzas/Contabilidad": 10,
-          "Marketing/Comercialización": 10,
-          "Operaciones/Supply Chain/Producción": 10,
-          "Tecnología/Sistemas/Transformación Digital": 10,
-          "Recursos Humanos/Desarrollo Organizacional": 10,
-          "Legal/Compliance": 10,
-          "Salud/Ciencias de la Vida": 10,
-          "Educación/Académico/Investigación": 10,
-          "Emprendimiento/Innovación": 9,
-          "Otro": 7,
-          "Otro.": 7
+          "Académico / Formación": 9,
+          "Administración & Finanzas": 10,
+          "Calidad / Seguridad / Medio Ambiente (HSE)": 10,
+          "Comercial / Ventas / Customer Experience": 10,
+          "Control de Gestión / Auditoría": 10,
+          "Data & Analytics / Transformación Digital": 10,
+          "Dirección General / Alta Gerencia": 10,
+          "Investigación & Desarrollo (I+D)": 8,
+          "Legal & Compliance": 10,
+          "Marketing & Comunicación": 9,
+          "Operaciones / Supply Chain": 10,
+          "Otros": 10,
+          "Planeamiento Estratégico / Desarrollo de Negocios": 10,
+          "Producto & Innovación": 10,
+          "Proyectos & Ingeniería": 10,
+          "Recursos Humanos": 9,
+          "Relaciones Institucionales / Comunicación Externa": 10,
+          "Salud / Servicios Médicos": 10,
+          "Sustentabilidad, ESG & Responsabilidad Social": 10,
+          "Tecnología / Sistemas": 10
         };
 
         const empleadosScoring = {
@@ -179,21 +215,13 @@
           "1000+": 10
         };
 
-        const experienciaScoring = {
-          "1-4": 6,
-          "5-9": 10,
-          "10-15": 10,
-          "15+": 10
-        };
-
         // Pesos por dimensión (pts → score %, usd → lead value)
         const PESOS = {
-          estudios:    { pts: 6.67,  usd: 75     },
-          cargo:       { pts: 50,    usd: 566    },
-          industria:   { pts: 6.67,  usd: 75.4  },
-          area:        { pts: 6.67,  usd: 75.4  },
-          empleados:   { pts: 15,    usd: 169.65 },
-          experiencia: { pts: 15,    usd: 169.65 }
+          estudios:  { pts: 6.67, usd: 75     },
+          cargo:     { pts: 50,   usd: 566    },
+          industria: { pts: 7,    usd: 75.4   },
+          area:      { pts: 7,    usd: 75.4   },
+          empleados: { pts: 15,   usd: 169.65 }
         };
 
         const form = e.target;
@@ -215,44 +243,40 @@
         console.log('  Industria (_dp_string219311):', formData['_dp_string219311']);
         console.log('  Área (_dp_string35228):', formData['_dp_string35228']);
         console.log('  Empleados (_dp_string219712):', formData['_dp_string219712']);
-        console.log('  Experiencia (_dp_string221700):', formData['_dp_string221700']);
 
         // Scores individuales (nullish coalescing: undefined → 0, no confunde con score=0 explícito)
-        const scoreEstudios    = estudiosScoring[formData['_dp_string219310']]    ?? 0;
-        const scoreCargo       = cargoScoring[formData['_dp_string18650']]        ?? 0;
-        const scoreIndustria   = industriasScoring[formData['_dp_string219311']]  ?? 0;
-        const scoreArea        = areaScoring[formData['_dp_string35228']]         ?? 0;
-        const scoreEmpleados   = empleadosScoring[formData['_dp_string219712']]   ?? 0;
-        const scoreExperiencia = experienciaScoring[formData['_dp_string221700']] ?? 0;
+        const scoreEstudios  = estudiosScoring[formData['_dp_string219310']]   ?? 0;
+        const scoreCargo     = cargoScoring[formData['_dp_string18650']]       ?? 0;
+        const scoreIndustria = industriasScoring[formData['_dp_string219311']] ?? 0;
+        const scoreArea      = areaScoring[formData['_dp_string35228']]        ?? 0;
+        const scoreEmpleados = empleadosScoring[formData['_dp_string219712']]  ?? 0;
 
         // Descalificación si algún score es 0
         if ([scoreEstudios, scoreCargo, scoreIndustria,
-             scoreArea, scoreEmpleados, scoreExperiencia].some(function (s) { return s === 0; })) {
+             scoreArea, scoreEmpleados].some(function (s) { return s === 0; })) {
           formData['LeadScore'] = 0;
           formData['LeadValue'] = 0;
           console.log('========================================');
           console.log('🚫 LEAD DESCALIFICADO');
           console.log('  Estudios:', scoreEstudios, '| Cargo:', scoreCargo,
                       '| Industria:', scoreIndustria, '| Área:', scoreArea,
-                      '| Empleados:', scoreEmpleados, '| Experiencia:', scoreExperiencia);
+                      '| Empleados:', scoreEmpleados);
           console.log('========================================');
         } else {
           const leadScore = Math.round((
-            (scoreEstudios    / 10 * PESOS.estudios.pts)   +
-            (scoreCargo       / 10 * PESOS.cargo.pts)      +
-            (scoreIndustria   / 10 * PESOS.industria.pts)  +
-            (scoreArea        / 10 * PESOS.area.pts)       +
-            (scoreEmpleados   / 10 * PESOS.empleados.pts)  +
-            (scoreExperiencia / 10 * PESOS.experiencia.pts)
+            (scoreEstudios  / 10 * PESOS.estudios.pts)  +
+            (scoreCargo     / 10 * PESOS.cargo.pts)     +
+            (scoreIndustria / 10 * PESOS.industria.pts) +
+            (scoreArea      / 10 * PESOS.area.pts)      +
+            (scoreEmpleados / 10 * PESOS.empleados.pts)
           ) * 100) / 100;
 
           const leadValue = Math.round((
-            (scoreEstudios    / 10 * PESOS.estudios.usd)   +
-            (scoreCargo       / 10 * PESOS.cargo.usd)      +
-            (scoreIndustria   / 10 * PESOS.industria.usd)  +
-            (scoreArea        / 10 * PESOS.area.usd)       +
-            (scoreEmpleados   / 10 * PESOS.empleados.usd)  +
-            (scoreExperiencia / 10 * PESOS.experiencia.usd)
+            (scoreEstudios  / 10 * PESOS.estudios.usd)  +
+            (scoreCargo     / 10 * PESOS.cargo.usd)     +
+            (scoreIndustria / 10 * PESOS.industria.usd) +
+            (scoreArea      / 10 * PESOS.area.usd)      +
+            (scoreEmpleados / 10 * PESOS.empleados.usd)
           ) * 100) / 100;
 
           formData['LeadScore'] = leadScore;
@@ -290,7 +314,22 @@
         const phoneRaw = (phoneField ? phoneField.value.trim() : '') ||
                          formData['PHONE'] || formData['phone'] || '';
 
+        // Para Sheets: separar prefijo y número local ANTES de normalizar
+        // (normalizePhone() quita espacios, por eso hay que buscarlos en el valor crudo)
+        const phoneRawTrimmed = (phoneRaw || '').trim();
+        const spaceIdx    = phoneRawTrimmed.indexOf(' ');
+        const phonePrefix = spaceIdx > -1
+          ? phoneRawTrimmed.substring(0, spaceIdx).replace(/[^\d+]/g, '')   // ej: "+54"
+          : '';
+        const phoneNumber = spaceIdx > -1
+          ? phoneRawTrimmed.substring(spaceIdx + 1).replace(/[^\d]/g, '')   // ej: "91156789012"
+          : phoneRawTrimmed.replace(/[^\d]/g, '');                          // sin prefijo separado
+
+        // Para GTM: número completo normalizado en E.164
         const phoneNorm = normalizePhone(phoneRaw);
+
+        console.log('📞 Prefijo capturado:', phonePrefix || '(sin espacio — todo en número)');
+        console.log('📞 Número local capturado:', phoneNumber);
 
         // Advertencia de formato E.164 — crítico para match de Meta
         if (phoneNorm && !/^\+\d{7,15}$/.test(phoneNorm)) {
@@ -361,12 +400,18 @@
         // ── POST A GOOGLE APPS SCRIPT (fire-and-forget) ──────────
         // keepalive asegura que la petición se complete aunque
         // Doppler navegue a una página de agradecimiento.
+        const payload = Object.assign({}, formData, {
+          spreadsheetId: '19UIyi_9Z1EwoMcPKt6l99Gqk-o0ocwp_aji6o6rWUxg',
+          phonePrefix:   phonePrefix,
+          phoneNumber:   phoneNumber
+        });
+
         fetch(
-          'https://script.google.com/macros/s/AKfycbz2PabT1TwCXnOrpit-lND9p_cRzyqHM1o5Qps0LLi7rKh7E2hGZ3qtDvgVoDepy9Gn/exec',
+          'https://script.google.com/macros/s/AKfycbxRvETdxndL5ybR7QNpbSnqwPtgvIS0ZPdTWrutOn8keCllqWy0cIh6MtMh1ZBa-wx9Ag/exec',
           {
             method:    'POST',
             mode:      'no-cors',
-            body:      JSON.stringify(formData),
+            body:      JSON.stringify(payload),
             keepalive: true
           }
         ).catch(function (err) { console.error('[Sheets] Error:', err); });
@@ -397,11 +442,19 @@
   </script>
 </head>
 
-<body>
+<body style="background-color: #f7f7f7; margin: 0; padding: 0;">
   <h1>Formulario de Suscripción</h1>
 
   <!-- Método 1: Formulario embebido con script -->
   <div data-dp-form="PavPYqQLC1%2bk5ArEBTJldw%3d%3d"></div>
+
+  <p style="font-size: 12px; margin-top: 8px; text-align: center; font-family: Arial, Helvetica, sans-serif; color: #555555;">
+    Al completar este formulario, aceptás los
+    <a href="https://www.iae.edu.ar/terminos-y-condiciones/" target="_blank" rel="noopener noreferrer" style="color: #555555;">
+      Términos y Condiciones
+    </a>
+    de IAE Business School.
+  </p>
 
   <!-- Método 2: iframe (comentado por defecto, descomentá si preferís usar el iframe) -->
   <!--
