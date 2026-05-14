@@ -420,6 +420,14 @@
           phoneNumber:   phoneNumber
         });
 
+        // Sanitizar campos de teléfono: Google Sheets interpreta el '+' inicial como
+        // operador de fórmula y devuelve #ERROR!. Se elimina solo en el payload de Sheets.
+        Object.keys(payload).forEach(function (key) {
+          if (typeof payload[key] === 'string' && /^\+\d/.test(payload[key])) {
+            payload[key] = payload[key].replace(/^\+/, '');
+          }
+        });
+
         fetch(
           'https://script.google.com/macros/s/AKfycbzDunypKnS19-yGdWKPxn6bscti6WUjUhC7pCNpq6Csz8aS36-QAmj2f_qBS8rK9ww3/exec',
           {
