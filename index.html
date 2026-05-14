@@ -314,16 +314,30 @@
         const phoneRaw = (phoneField ? phoneField.value.trim() : '') ||
                          formData['PHONE'] || formData['phone'] || '';
 
-        // Para Sheets: separar prefijo y número local ANTES de normalizar
-        // (normalizePhone() quita espacios, por eso hay que buscarlos en el valor crudo)
+        // Para Sheets: separar prefijo y número local.
+        // Soporta tanto "+54 91156789012" (con espacio) como "+5491156789012" (sin espacio).
+        // Los códigos de 3 dígitos van primero para evitar coincidencias parciales (ej: +595 antes de +59).
+        const DIAL_CODES = ['+595', '+591', '+593', '+52', '+54', '+55', '+56', '+57', '+51', '+58', '+1'];
         const phoneRawTrimmed = (phoneRaw || '').trim();
-        const spaceIdx    = phoneRawTrimmed.indexOf(' ');
-        const phonePrefix = spaceIdx > -1
-          ? phoneRawTrimmed.substring(0, spaceIdx).replace(/[^\d+]/g, '')   // ej: "+54"
-          : '';
-        const phoneNumber = spaceIdx > -1
-          ? phoneRawTrimmed.substring(spaceIdx + 1).replace(/[^\d]/g, '')   // ej: "91156789012"
-          : phoneRawTrimmed.replace(/[^\d]/g, '');                          // sin prefijo separado
+        const phoneCompact    = phoneRawTrimmed.replace(/\s/g, '');  // sin espacios, para matching
+        let phonePrefix = '';
+        let phoneNumber = '';
+        if (phoneCompact.startsWith('+')) {
+          const matched = DIAL_CODES.find(function (code) { return phoneCompact.startsWith(code); });
+          if (matched) {
+            phonePrefix = matched;
+            phoneNumber = phoneCompact.substring(matched.length).replace(/[^\d]/g, '');
+          } else {
+            // Fallback: si había espacio, usar como separador; si no, todo es número
+            const spaceIdx = phoneRawTrimmed.indexOf(' ');
+            phonePrefix = spaceIdx > -1 ? phoneRawTrimmed.substring(0, spaceIdx).replace(/[^\d+]/g, '') : '';
+            phoneNumber = spaceIdx > -1
+              ? phoneRawTrimmed.substring(spaceIdx + 1).replace(/[^\d]/g, '')
+              : phoneCompact.replace(/[^\d]/g, '');
+          }
+        } else {
+          phoneNumber = phoneCompact.replace(/[^\d]/g, '');
+        }
 
         // Para GTM: número completo normalizado en E.164
         const phoneNorm = normalizePhone(phoneRaw);
@@ -402,12 +416,12 @@
         // Doppler navegue a una página de agradecimiento.
         const payload = Object.assign({}, formData, {
           spreadsheetId: '19UIyi_9Z1EwoMcPKt6l99Gqk-o0ocwp_aji6o6rWUxg',
-          phonePrefix:   phonePrefix,
+          phonePrefix:   phonePrefix.replace('+', ''),
           phoneNumber:   phoneNumber
         });
 
         fetch(
-          'https://script.google.com/macros/s/AKfycbxRvETdxndL5ybR7QNpbSnqwPtgvIS0ZPdTWrutOn8keCllqWy0cIh6MtMh1ZBa-wx9Ag/exec',
+          'https://script.google.com/macros/s/AKfycbzDunypKnS19-yGdWKPxn6bscti6WUjUhC7pCNpq6Csz8aS36-QAmj2f_qBS8rK9ww3/exec',
           {
             method:    'POST',
             mode:      'no-cors',
