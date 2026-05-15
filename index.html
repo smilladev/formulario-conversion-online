@@ -420,6 +420,14 @@
           phoneNumber:   phoneNumber
         });
 
+        // Sheets: enviar código de país y número por separado (phonePrefix + phoneNumber).
+        // Se elimina el campo de teléfono combinado para que no llegue duplicado a Sheets.
+        // GTM NO se ve afectado (usa sha256_phone_number / ph calculados antes).
+        if (phoneField && phoneField.name) {
+          delete payload[phoneField.name];
+        }
+        ['PHONE', 'phone'].forEach(function (k) { delete payload[k]; });
+
         // Sanitizar campos de teléfono: Google Sheets interpreta el '+' inicial como
         // operador de fórmula y devuelve #ERROR!. Se elimina solo en el payload de Sheets.
         Object.keys(payload).forEach(function (key) {
