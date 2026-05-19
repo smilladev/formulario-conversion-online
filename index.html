@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="https://cdn.fromdoppler.com/formgenerator/latest/styles.css?67493465" />
 
   <script>
-    console.log('🚀 IAE Formulario v2.3 — 2026-05-19 — fix: phone field prioridad _dp_phone* + paisMapping completo');
+    console.log('🚀 IAE Formulario v2.4 — 2026-05-19 — fix: empleados normHyphen + payload phone log');
 
     // ============================================================
     // 1. PERSISTENCIA DE CLICK IDs Y UTMs EN sessionStorage
@@ -246,12 +246,16 @@
         console.log('  Área (_dp_string35228):', formData['_dp_string35228']);
         console.log('  Empleados (_dp_string219712):', formData['_dp_string219712']);
 
+        // Normaliza guiones largos/em-dash que Doppler puede enviar en valores de rango (ej: "201–500")
+        function normHyphen(s) { return (s || '').replace(/\u2013|\u2014/g, '-').trim(); }
+
         // Scores individuales (nullish coalescing: undefined → 0, no confunde con score=0 explícito)
-        const scoreEstudios  = estudiosScoring[formData['_dp_string219310']]   ?? 0;
-        const scoreCargo     = cargoScoring[formData['_dp_string18650']]       ?? 0;
-        const scoreIndustria = industriasScoring[formData['_dp_string219311']] ?? 0;
-        const scoreArea      = areaScoring[formData['_dp_string35228']]        ?? 0;
-        const scoreEmpleados = empleadosScoring[formData['_dp_string219712']]  ?? 0;
+        const scoreEstudios  = estudiosScoring[formData['_dp_string219310']]            ?? 0;
+        const scoreCargo     = cargoScoring[formData['_dp_string18650']]               ?? 0;
+        const scoreIndustria = industriasScoring[formData['_dp_string219311']]         ?? 0;
+        const scoreArea      = areaScoring[formData['_dp_string35228']]                ?? 0;
+        const scoreEmpleados = empleadosScoring[normHyphen(formData['_dp_string219712'])] ?? 0;
+        console.log('🔢 Empleados raw:', JSON.stringify(formData['_dp_string219712']), '→ normalizado:', normHyphen(formData['_dp_string219712']), '→ score:', scoreEmpleados);
 
         // Descalificación si algún score es 0
         if ([scoreEstudios, scoreCargo, scoreIndustria,
@@ -449,9 +453,8 @@
         // Sheets: enviar código de país y número por separado (phonePrefix + phoneNumber).
         // Se elimina el campo de teléfono combinado para que no llegue duplicado a Sheets.
         // GTM NO se ve afectado (usa sha256_phone_number / ph calculados antes).
-        if (phoneField && phoneField.name) {
-          delete payload[phoneField.name];
-        }
+        if (phoneField && phoneField.name) delete payload[phoneField.name];
+        if (dopplerPhoneKey)               delete payload[dopplerPhoneKey]; // elimina _dp_phone219293 (ya separado en phonePrefix/phoneNumber)
         ['PHONE', 'phone'].forEach(function (k) { delete payload[k]; });
 
         // Sanitizar campos de teléfono: Google Sheets interpreta el '+' inicial como
@@ -461,6 +464,8 @@
             payload[key] = payload[key].replace(/^\+/, '');
           }
         });
+
+        console.log('📤 Payload → Sheets (teléfono):', 'phonePrefix:', payload.phonePrefix, '| phoneNumber:', payload.phoneNumber);
 
         fetch(
           'https://script.google.com/macros/s/AKfycbzDunypKnS19-yGdWKPxn6bscti6WUjUhC7pCNpq6Csz8aS36-QAmj2f_qBS8rK9ww3/exec',
