@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="https://cdn.fromdoppler.com/formgenerator/latest/styles.css?67493465" />
 
   <script>
-    console.log('🚀 IAE Formulario v2.2 — 2026-05-19 — fix: phone field + scoring guiones');
+    console.log('🚀 IAE Formulario v2.3 — 2026-05-19 — fix: phone field prioridad _dp_phone* + paisMapping completo');
 
     // ============================================================
     // 1. PERSISTENCIA DE CLICK IDs Y UTMs EN sessionStorage
@@ -290,10 +290,27 @@
         }
 
         // ── MAPEO DE PAÍS (ID → NOMBRE) ─────────────────────────
+        // IDs internos de Doppler → nombre del país (extraídos del vendor.js de Doppler)
         const paisMapping = {
-          "10": "Argentina", "31": "Brasil",   "46": "Chile",
-          "186": "Paraguay", "49": "Colombia", "29": "Bolivia",
-          "63": "Ecuador",   "174": "Peru",    "238": "Venezuela"
+          // América del Sur
+          "10":  "Argentina",  "29":  "Bolivia",    "31":  "Brasil",
+          "46":  "Chile",      "49":  "Colombia",   "63":  "Ecuador",
+          "174": "Peru",       "186": "Paraguay",   "234": "Uruguay",
+          "238": "Venezuela",  "94":  "Guyana",     "207": "Suriname",
+          // América Central y Caribe
+          "157": "México",     "50":  "Costa Rica", "61":  "República Dominicana",
+          "210": "El Salvador","91":  "Guatemala",  "97":  "Honduras",
+          "165": "Nicaragua",  "173": "Panamá",     "99":  "Haití",
+          "112": "Jamaica",    "51":  "Cuba",       "182": "Puerto Rico",
+          // América del Norte
+          "233": "Estados Unidos", "38": "Canadá",
+          // Europa
+          "68":  "España",     "75":  "Francia",    "57":  "Alemania",
+          "110": "Italia",     "77":  "Reino Unido","43":  "Suiza",
+          "179": "Polonia",    "189": "Rumania",    "197": "Suecia",
+          // Otros
+          "48":  "China",      "114": "Japón",      "105": "India",
+          "13":  "Australia",  "2":   "Emiratos Árabes Unidos"
         };
         for (const key in formData) {
           if (key.toLowerCase().includes('country') || key.toLowerCase().includes('pais')) {
@@ -312,12 +329,15 @@
         const phoneField = form.querySelector('input[type="tel"]');
 
         // Doppler puede cambiar el sufijo numérico del campo teléfono (ej: _dp_phone219293)
+        // El campo _dp_phone* contiene el número COMPLETO con prefijo (ej: "+54 9 11 56789012")
+        // mientras que phoneField.value suele tener solo los dígitos sin prefijo → priorizamos _dp_phone*
         const dopplerPhoneKey = Object.keys(formData).find(function(k) { return /^_dp_phone/.test(k); });
+        console.log('📞 Campo teléfono Doppler detectado:', dopplerPhoneKey || '(no encontrado)');
 
         const emailRaw = (emailField ? emailField.value.trim() : '') ||
                          formData['EMAIL'] || formData['email'] || '';
-        const phoneRaw = (phoneField ? phoneField.value.trim() : '') ||
-                         (dopplerPhoneKey ? formData[dopplerPhoneKey] : '') ||
+        const phoneRaw = (dopplerPhoneKey ? formData[dopplerPhoneKey] : '') ||
+                         (phoneField ? phoneField.value.trim() : '') ||
                          formData['PHONE'] || formData['phone'] || '';
 
         // Para Sheets: separar prefijo y número local.
