@@ -207,11 +207,11 @@
         };
 
         const empleadosScoring = {
-          "1–10": 4,
-          "11–50": 9,
-          "51–200": 10,
-          "201–500": 10,
-          "501–1000": 10,
+          "1-10": 4,
+          "11-50": 9,
+          "51-200": 10,
+          "201-500": 10,
+          "501-1000": 10,
           "1000+": 10
         };
 
@@ -309,9 +309,13 @@
         const emailField = form.querySelector('input[type="email"]');
         const phoneField = form.querySelector('input[type="tel"]');
 
+        // Doppler puede cambiar el sufijo numérico del campo teléfono (ej: _dp_phone219293)
+        const dopplerPhoneKey = Object.keys(formData).find(function(k) { return /^_dp_phone/.test(k); });
+
         const emailRaw = (emailField ? emailField.value.trim() : '') ||
                          formData['EMAIL'] || formData['email'] || '';
         const phoneRaw = (phoneField ? phoneField.value.trim() : '') ||
+                         (dopplerPhoneKey ? formData[dopplerPhoneKey] : '') ||
                          formData['PHONE'] || formData['phone'] || '';
 
         // Para Sheets: separar prefijo y número local.
