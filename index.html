@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="https://cdn.fromdoppler.com/formgenerator/latest/styles.css?67493465" />
 
   <script>
-    console.log('🚀 IAE Formulario v2.4 — 2026-05-19 — fix: empleados normHyphen + payload phone log');
+    console.log('🚀 IAE Formulario v2.5 — 2026-05-20 — revert: Apps Script URL original');
 
     // ============================================================
     // 1. PERSISTENCIA DE CLICK IDs Y UTMs EN sessionStorage
@@ -468,7 +468,7 @@
         console.log('📤 Payload → Sheets (teléfono):', 'phonePrefix:', payload.phonePrefix, '| phoneNumber:', payload.phoneNumber);
 
         fetch(
-          'https://script.google.com/macros/s/AKfycbxRvETdxndL5ybR7QNpbSnqwPtgvIS0ZPdTWrutOn8keCllqWy0cIh6MtMh1ZBa-wx9Ag/exec',
+          'https://script.google.com/macros/s/AKfycbzDunypKnS19-yGdWKPxn6bscti6WUjUhC7pCNpq6Csz8aS36-QAmj2f_qBS8rK9ww3/exec',
           {
             method:    'POST',
             mode:      'no-cors',
