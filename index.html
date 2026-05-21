@@ -447,7 +447,14 @@
         const payload = Object.assign({}, formData, {
           spreadsheetId: '19UIyi_9Z1EwoMcPKt6l99Gqk-o0ocwp_aji6o6rWUxg',
           phonePrefix:   phonePrefix.replace('+', ''),
-          phoneNumber:   phoneNumber
+          phoneNumber:   phoneNumber,
+          // UTMs explícitos desde captureClickParams() — no depende de la inyección de campos hidden
+          utm:           clickParams.utm,
+          utm_source:    clickParams.utm_source,
+          utm_medium:    clickParams.utm_medium,
+          utm_campaign:  clickParams.utm_campaign,
+          utm_term:      clickParams.utm_term,
+          utm_content:   clickParams.utm_content
         });
 
         // Sheets: enviar código de país y número por separado (phonePrefix + phoneNumber).
