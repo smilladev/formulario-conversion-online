@@ -217,13 +217,21 @@
           "1000+": 10
         };
 
+        const experienciaScoring = {
+          "1-4":   6,
+          "5-9":   10,
+          "10-15": 10,
+          "15+":   10
+        };
+
         // Pesos por dimensión (pts → score %, usd → lead value)
         const PESOS = {
-          estudios:  { pts: 6.67, usd: 75     },
-          cargo:     { pts: 50,   usd: 566    },
-          industria: { pts: 7,    usd: 75.4   },
-          area:      { pts: 7,    usd: 75.4   },
-          empleados: { pts: 15,   usd: 169.65 }
+          estudios:    { pts: 6,    usd: 75     },
+          cargo:       { pts: 50,   usd: 566    },
+          industria:   { pts: 7,    usd: 75.4   },
+          area:        { pts: 7,    usd: 75.4   },
+          empleados:   { pts: 15,   usd: 169.65 },
+          experiencia: { pts: 15,   usd: 169.65 }
         };
 
         const form = e.target;
@@ -245,44 +253,49 @@
         console.log('  Industria (_dp_string219311):', formData['_dp_string219311']);
         console.log('  Área (_dp_string35228):', formData['_dp_string35228']);
         console.log('  Empleados (_dp_string219712):', formData['_dp_string219712']);
+        console.log('  Experiencia (_dp_string221700):', formData['_dp_string221700']);
 
         // Normaliza guiones largos/em-dash que Doppler puede enviar en valores de rango (ej: "201–500")
         function normHyphen(s) { return (s || '').replace(/\u2013|\u2014/g, '-').trim(); }
 
         // Scores individuales (nullish coalescing: undefined → 0, no confunde con score=0 explícito)
-        const scoreEstudios  = estudiosScoring[formData['_dp_string219310']]            ?? 0;
-        const scoreCargo     = cargoScoring[formData['_dp_string18650']]               ?? 0;
-        const scoreIndustria = industriasScoring[formData['_dp_string219311']]         ?? 0;
-        const scoreArea      = areaScoring[formData['_dp_string35228']]                ?? 0;
-        const scoreEmpleados = empleadosScoring[normHyphen(formData['_dp_string219712'])] ?? 0;
+        const scoreEstudios    = estudiosScoring[formData['_dp_string219310']]               ?? 0;
+        const scoreCargo       = cargoScoring[formData['_dp_string18650']]                  ?? 0;
+        const scoreIndustria   = industriasScoring[formData['_dp_string219311']]            ?? 0;
+        const scoreArea        = areaScoring[formData['_dp_string35228']]                   ?? 0;
+        const scoreEmpleados   = empleadosScoring[normHyphen(formData['_dp_string219712'])]    ?? 0;
+        const scoreExperiencia = experienciaScoring[normHyphen(formData['_dp_string221700'])]  ?? 0;
         console.log('🔢 Empleados raw:', JSON.stringify(formData['_dp_string219712']), '→ normalizado:', normHyphen(formData['_dp_string219712']), '→ score:', scoreEmpleados);
+        console.log('🔢 Experiencia raw:', JSON.stringify(formData['_dp_string221700']), '→ normalizado:', normHyphen(formData['_dp_string221700']), '→ score:', scoreExperiencia);
 
         // Descalificación si algún score es 0
         if ([scoreEstudios, scoreCargo, scoreIndustria,
-             scoreArea, scoreEmpleados].some(function (s) { return s === 0; })) {
+             scoreArea, scoreEmpleados, scoreExperiencia].some(function (s) { return s === 0; })) {
           formData['LeadScore'] = 0;
           formData['LeadValue'] = 0;
           console.log('========================================');
           console.log('🚫 LEAD DESCALIFICADO');
           console.log('  Estudios:', scoreEstudios, '| Cargo:', scoreCargo,
                       '| Industria:', scoreIndustria, '| Área:', scoreArea,
-                      '| Empleados:', scoreEmpleados);
+                      '| Empleados:', scoreEmpleados, '| Experiencia:', scoreExperiencia);
           console.log('========================================');
         } else {
           const leadScore = Math.round((
-            (scoreEstudios  / 10 * PESOS.estudios.pts)  +
-            (scoreCargo     / 10 * PESOS.cargo.pts)     +
-            (scoreIndustria / 10 * PESOS.industria.pts) +
-            (scoreArea      / 10 * PESOS.area.pts)      +
-            (scoreEmpleados / 10 * PESOS.empleados.pts)
+            (scoreEstudios    / 10 * PESOS.estudios.pts)    +
+            (scoreCargo       / 10 * PESOS.cargo.pts)       +
+            (scoreIndustria   / 10 * PESOS.industria.pts)   +
+            (scoreArea        / 10 * PESOS.area.pts)        +
+            (scoreEmpleados   / 10 * PESOS.empleados.pts)   +
+            (scoreExperiencia / 10 * PESOS.experiencia.pts)
           ) * 100) / 100;
 
           const leadValue = Math.round((
-            (scoreEstudios  / 10 * PESOS.estudios.usd)  +
-            (scoreCargo     / 10 * PESOS.cargo.usd)     +
-            (scoreIndustria / 10 * PESOS.industria.usd) +
-            (scoreArea      / 10 * PESOS.area.usd)      +
-            (scoreEmpleados / 10 * PESOS.empleados.usd)
+            (scoreEstudios    / 10 * PESOS.estudios.usd)    +
+            (scoreCargo       / 10 * PESOS.cargo.usd)       +
+            (scoreIndustria   / 10 * PESOS.industria.usd)   +
+            (scoreArea        / 10 * PESOS.area.usd)        +
+            (scoreEmpleados   / 10 * PESOS.empleados.usd)   +
+            (scoreExperiencia / 10 * PESOS.experiencia.usd)
           ) * 100) / 100;
 
           formData['LeadScore'] = leadScore;
