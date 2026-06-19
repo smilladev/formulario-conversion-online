@@ -19,10 +19,22 @@
 
   <style>
     /* Campos ocultos: industria, área, empleados, experiencia */
+    /* Oculta el input/select */
     [name="_dp_string219311"],
     [name="_dp_string35228"],
     [name="_dp_string219712"],
     [name="_dp_string221700"] {
+      display: none !important;
+    }
+    /* Oculta el contenedor completo (label + input) para eliminar el espacio vacío */
+    li:has([name="_dp_string219311"]),
+    li:has([name="_dp_string35228"]),
+    li:has([name="_dp_string219712"]),
+    li:has([name="_dp_string221700"]),
+    div:has(> [name="_dp_string219311"]),
+    div:has(> [name="_dp_string35228"]),
+    div:has(> [name="_dp_string219712"]),
+    div:has(> [name="_dp_string221700"]) {
       display: none !important;
     }
   </style>
