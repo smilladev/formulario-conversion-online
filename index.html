@@ -121,8 +121,20 @@
       fieldsToHide.forEach(function (fieldName) {
         var el = form.querySelector('[name="' + fieldName + '"]');
         if (!el) return;
-        // Sube por el DOM hasta encontrar el contenedor raíz del campo
-        // (hijo directo del form, <ul> o <ol>) y lo oculta completo.
+
+        // 1. Quitar required y asignar primer valor válido para que la
+        //    validación interna de Doppler no bloquee el submit.
+        el.required = false;
+        el.removeAttribute('required');
+        if (el.tagName === 'SELECT') {
+          var firstOpt = el.querySelector('option[value]:not([value=""])');
+          if (firstOpt) el.value = firstOpt.value;
+        } else if (!el.value) {
+          el.value = 'N/A';
+        }
+
+        // 2. Sube por el DOM hasta encontrar el contenedor raíz del campo
+        //    (hijo directo del form, <ul> o <ol>) y lo oculta completo.
         var node = el;
         while (node && node !== form) {
           var parent = node.parentElement;
