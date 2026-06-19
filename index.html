@@ -120,12 +120,18 @@
       ];
       fieldsToHide.forEach(function (fieldName) {
         var el = form.querySelector('[name="' + fieldName + '"]');
-        if (el) {
-          var container = el.closest('li') ||
-                          el.closest('[class*="field"]') ||
-                          el.closest('[class*="group"]') ||
-                          el.parentElement;
-          if (container) container.style.display = 'none';
+        if (!el) return;
+        // Sube por el DOM hasta encontrar el contenedor raíz del campo
+        // (hijo directo del form, <ul> o <ol>) y lo oculta completo.
+        var node = el;
+        while (node && node !== form) {
+          var parent = node.parentElement;
+          if (!parent || parent === form ||
+              parent.tagName === 'UL' || parent.tagName === 'OL') {
+            node.style.cssText += ';display:none!important;margin:0!important;padding:0!important;';
+            break;
+          }
+          node = parent;
         }
       });
     }
