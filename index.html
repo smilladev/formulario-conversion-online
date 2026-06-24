@@ -149,6 +149,24 @@
     }
 
     // ============================================================
+    // 4c. FORZAR OBLIGATORIEDAD EN NIVEL DE ESTUDIOS Y CARGO
+    //     Doppler puede no marcarlos como required; lo garantizamos
+    //     aquí para que el navegador bloquee el submit si están vacíos.
+    // ============================================================
+    function makeFieldsRequired(form) {
+      var fieldsRequired = [
+        '_dp_string219310', // nivel_de_estudios
+        '_dp_string18650'   // cargo
+      ];
+      fieldsRequired.forEach(function (fieldName) {
+        var el = form.querySelector('[name="' + fieldName + '"]');
+        if (!el) return;
+        el.required = true;
+        el.setAttribute('required', '');
+      });
+    }
+
+    // ============================================================
     // 4. INYECCIÓN DE CAMPOS HIDDEN (UTMs + Click IDs)
     //    Los valores se envían a Doppler/CRM junto con el formulario.
     // ============================================================
@@ -566,7 +584,11 @@
           // Ocultar campos — Doppler renderiza de forma asíncrona,
           // el MutationObserver garantiza que se oculten aunque lleguen tarde.
           hideFormFields(form);
-          const fieldObserver = new MutationObserver(function () { hideFormFields(form); });
+          makeFieldsRequired(form);
+          const fieldObserver = new MutationObserver(function () {
+            hideFormFields(form);
+            makeFieldsRequired(form);
+          });
           fieldObserver.observe(form, { childList: true, subtree: true });
           setTimeout(function () { fieldObserver.disconnect(); }, 5000);
           console.log('✅ Listener de formulario configurado');
