@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="https://cdn.fromdoppler.com/formgenerator/latest/styles.css?67493465" />
 
   <script>
-    console.log('🚀 IAE Formulario v4.1 — 2026-08-24 — update: no se envia a GTM/Sheets si el form tiene campos obligatorios incompletos o invalidos');
+    console.log('🚀 IAE Formulario v4.3 — 2026-08-24 — update: estudiosScoring actualizado segun sheet de criterio (Doctorado/PhD ahora en 10)');
 
     // ============================================================
     // 1. PERSISTENCIA DE CLICK IDs Y UTMs EN sessionStorage
@@ -200,14 +200,14 @@
         // Scores 0-10 por dimensión. Score 0 = lead descalificado.
         const estudiosScoring = {
           "Secundario incompleto": 0,
-          "Secundario completo": 8,
-          "Terciario incompleto": 8,
-          "Terciario completo": 9,
-          "Universitario incompleto": 8,
-          "Universitario completo": 9,
-          "Posgrado/Maestría": 9,
-          "Doctorado/PhD": 9,
-          "Doctorado/PhD.": 9
+          "Secundario completo": 9,
+          "Terciario incompleto": 9,
+          "Terciario completo": 10,
+          "Universitario incompleto": 9,
+          "Universitario completo": 10,
+          "Posgrado/Maestría": 10,
+          "Doctorado/PhD": 10,
+          "Doctorado/PhD.": 10
         };
 
         const cargoScoring = {
@@ -354,17 +354,23 @@
 
         // ── HASHING SHA-256 (Conversiones Mejoradas Google + Meta CAPI) ──
 
-        // Buscar email y teléfono usando atributos de tipo estándar
+        // Buscar email y teléfono. Doppler renderiza el campo de email como
+        // input[type="text"] (name="_dp_email"), no type="email" — por eso
+        // se busca primero por el campo _dp_email* de formData, igual que
+        // ya se hacía con el teléfono.
         const emailField = form.querySelector('input[type="email"]');
         const phoneField = form.querySelector('input[type="tel"]');
 
         // Doppler puede cambiar el sufijo numérico del campo teléfono (ej: _dp_phone219293)
         // El campo _dp_phone* contiene el número COMPLETO con prefijo (ej: "+54 9 11 56789012")
         // mientras que phoneField.value suele tener solo los dígitos sin prefijo → priorizamos _dp_phone*
+        const dopplerEmailKey = Object.keys(formData).find(function(k) { return /^_dp_email/.test(k); });
         const dopplerPhoneKey = Object.keys(formData).find(function(k) { return /^_dp_phone/.test(k); });
+        console.log('📧 Campo email Doppler detectado:', dopplerEmailKey || '(no encontrado)');
         console.log('📞 Campo teléfono Doppler detectado:', dopplerPhoneKey || '(no encontrado)');
 
-        const emailRaw = (emailField ? emailField.value.trim() : '') ||
+        const emailRaw = (dopplerEmailKey ? formData[dopplerEmailKey] : '') ||
+                         (emailField ? emailField.value.trim() : '') ||
                          formData['EMAIL'] || formData['email'] || '';
         const phoneRaw = (dopplerPhoneKey ? formData[dopplerPhoneKey] : '') ||
                          (phoneField ? phoneField.value.trim() : '') ||
@@ -434,7 +440,7 @@
             em:                   hashedEmail,
             ph:                   hashedPhone,
             // Datos en texto plano
-            first_name:           normalizeString(formData['FIRSTNAME'] || formData['_dp_name'] || ''),
+            first_name:           normalizeString(formData['_dp_string319'] || formData['FIRSTNAME'] || ''),
             city:                 normalizeString(formData['CITY'] || formData['ciudad'] || ''),
             // Click IDs — críticos para atribución
             gclid:                clickParams.gclid,
