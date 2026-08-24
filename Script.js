@@ -19,33 +19,48 @@ function doPost(e) {
       throw new Error('No se encontro la pestana: ' + SHEET_NAME);
     }
 
-    const ts = data['timestamp'] || Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'dd/MM/yyyy HH:mm:ss');
-
+    // El orden de abajo tiene que coincidir EXACTO con la fila 1 (encabezados) del sheet real:
+    // DB_Tipo de Documento | DB_Nro. de documento | Correo electronico | Nombre | Apellido |
+    // DB_Sexo | DB_Fecha de Nacimiento | Pais de Residencia | Provincia DP | Ciudad DP |
+    // Pais Telefono | Telefono Codigo Area | Telefono 3 | Producto Nombre | ID. |
+    // utm_source | utm_medium | utm_content | utm_term | utm_campaign | campaniaid | Canal |
+    // Plantilla auto respuesta | Derivar a | Derivar a cola
+    // + columnas nuevas al final: Nivel de estudios | Cargo | Area | LeadScore | LeadValue
+    //
+    // Provincia DP, Ciudad DP, Telefono Codigo Area, Telefono 3, Producto Nombre, ID.,
+    // campaniaid, Canal, Plantilla auto respuesta, Derivar a y Derivar a cola no tienen
+    // un campo de origen en el form/formData todavia -> quedan vacias a proposito.
     sheet.appendRow([
-      data['_dp_string319']    || '', // nombre
-      data['_dp_string320']    || '', // apellido
-      data['_dp_string246369'] || '', // sexo
-      data['_dp_date219708']   || '', // fecha_de_nacimiento
-      data['_dp_email']        || '', // email
-      data['phonePrefix']      || '', // codigo
-      data['phoneNumber']      || '', // telefono
-      data['_dp_country']      || '', // pais
-      data['_dp_string219310'] || '', // nivel_de_estudios
-      data['_dp_string18650']  || '', // cargo
-      data['_dp_string35228']  || '', // area
-      data['_dp_string219311'] || '', // industria (no participa del scoring, se persiste igual)
-      data['_dp_string197389'] || '', // tipo_de_documento
-      data['_dp_string219707'] || '', // numero_documento
-      data['LeadScore']        || 0,  // lead_scoring
-      data['LeadValue']        || 0,  // lead_value
-      ts,
-      '', '', '', '', '', '',
-      data['utm_content']      || '',
-      data['utm']              || '',
+      data['_dp_string197389'] || '', // DB_Tipo de Documento
+      data['_dp_string219707'] || '', // DB_Nro. de documento
+      data['_dp_email']        || '', // Correo electronico
+      data['_dp_string319']    || '', // Nombre
+      data['_dp_string320']    || '', // Apellido
+      data['_dp_string246369'] || '', // DB_Sexo
+      data['_dp_date219708']   || '', // DB_Fecha de Nacimiento
+      data['_dp_country']      || '', // Pais de Residencia
+      '',                              // Provincia DP (sin dato de origen)
+      '',                              // Ciudad DP (sin dato de origen)
+      data['phonePrefix']      || '', // Pais Telefono (codigo de pais)
+      '',                              // Telefono Codigo Area (sin dato de origen)
+      '',                              // Telefono 3 (sin dato de origen)
+      '',                              // Producto Nombre (sin dato de origen)
+      '',                              // ID. (sin dato de origen)
       data['utm_source']       || '',
       data['utm_medium']       || '',
+      data['utm_content']      || '',
+      data['utm_term']         || '',
       data['utm_campaign']     || '',
-      data['utm_term']         || ''
+      '',                              // campaniaid (sin dato de origen)
+      '',                              // Canal (sin dato de origen)
+      '',                              // Plantilla auto respuesta (sin dato de origen)
+      '',                              // Derivar a (sin dato de origen)
+      '',                              // Derivar a cola (sin dato de origen)
+      data['_dp_string219310'] || '', // Nivel de estudios
+      data['_dp_string18650']  || '', // Cargo
+      data['_dp_string35228']  || '', // Area
+      data['LeadScore']        || 0,  // LeadScore
+      data['LeadValue']        || 0   // LeadValue
     ]);
 
     return ContentService
