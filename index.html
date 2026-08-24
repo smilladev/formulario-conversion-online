@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="https://cdn.fromdoppler.com/formgenerator/latest/styles.css?67493465" />
 
   <script>
-    console.log('🚀 IAE Formulario v4.0 — 2026-08-24 — update: nuevo modelo de scoring Director de Ventas (Área activada, valor base 48)');
+    console.log('🚀 IAE Formulario v4.1 — 2026-08-24 — update: no se envia a GTM/Sheets si el form tiene campos obligatorios incompletos o invalidos');
 
     // ============================================================
     // 1. PERSISTENCIA DE CLICK IDs Y UTMs EN sessionStorage
@@ -183,6 +183,18 @@
       // handleSubmit es async para poder awaitar el hashing SHA-256
       const handleSubmit = async function (e) {
 
+        const form = e.target;
+
+        // ── VALIDACIÓN DE CAMPOS OBLIGATORIOS ───────────────────
+        // Si falta o está mal completado algún campo required del form
+        // (Doppler puede disparar el submit sin pasar por la validación
+        // nativa del navegador), no se envía nada ni a GTM ni a Sheets.
+        if (!form.checkValidity()) {
+          console.warn('⛔ Formulario incompleto o inválido — no se envía a GTM ni a Sheets.');
+          if (typeof form.reportValidity === 'function') form.reportValidity();
+          return;
+        }
+
         // ── LEAD SCORING ────────────────────────────────────────
 
         // Scores 0-10 por dimensión. Score 0 = lead descalificado.
@@ -254,8 +266,6 @@
           cargo:    { pts: 33, usd: 15.84 },
           area:     { pts: 50, usd: 24    }
         };
-
-        const form = e.target;
 
         // Capturar todos los campos del formulario
         const formData = {};
