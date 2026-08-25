@@ -34,8 +34,9 @@ function doPost(e) {
     // Telefono: phonePrefix es el codigo de pais (ej: "54") y phoneNumber es
     // TODO lo que sigue (codigo de area + numero local juntos, sin separar --
     // los codigos de area argentinos varian de 2 a 4 digitos, no hay forma
-    // confiable de partirlos sin una tabla de prefijos). Va completo a
-    // "Telefono 3"; "Telefono Codigo Area" queda vacio.
+    // confiable de partirlos sin una tabla de prefijos). Va completo a la
+    // columna "Telefono Codigo Area" (el titulo de esa columna se puede
+    // renombrar en el sheet sin volver a deployar); "Telefono 3" queda vacio.
     sheet.appendRow([
       data['_dp_string197389'] || '', // DB_Tipo de Documento
       data['_dp_string219707'] || '', // DB_Nro. de documento
@@ -48,8 +49,8 @@ function doPost(e) {
       '',                              // Provincia DP (sin dato de origen)
       '',                              // Ciudad DP (sin dato de origen)
       data['phonePrefix']      || '', // Pais Telefono (codigo de pais)
-      '',                              // Telefono Codigo Area (no se puede separar de forma confiable)
-      data['phoneNumber']      || '', // Telefono 3 (codigo de area + numero local, sin separar)
+      data['phoneNumber']      || '', // Telefono Codigo Area (codigo de area + numero local, sin separar)
+      '',                              // Telefono 3 (sin dato de origen)
       '',                              // Producto Nombre (sin dato de origen)
       '',                              // ID. (sin dato de origen)
       data['utm_source']       || '',
