@@ -25,18 +25,16 @@ function doPost(e) {
     // Pais Telefono | Telefono Codigo Area | Telefono 3 | Producto Nombre | ID. |
     // utm_source | utm_medium | utm_content | utm_term | utm_campaign | campaniaid | Canal |
     // Plantilla auto respuesta | Derivar a | Derivar a cola
-    // + columnas nuevas al final: Nivel de estudios | Cargo | Area | LeadScore | LeadValue
+    // + columnas nuevas al final: Formacion academica | Cargo | Area practica | Score | Value
     //
-    // Provincia DP, Ciudad DP, Producto Nombre, ID., campaniaid, Canal,
-    // Plantilla auto respuesta, Derivar a y Derivar a cola no tienen un campo
+    // Provincia DP, Ciudad DP, Telefono Codigo Area, Producto Nombre, ID., campaniaid,
+    // Canal, Plantilla auto respuesta, Derivar a y Derivar a cola no tienen un campo
     // de origen en el form/formData todavia -> quedan vacias a proposito.
     //
-    // Telefono: phonePrefix es el codigo de pais (ej: "54") y phoneNumber es
-    // TODO lo que sigue (codigo de area + numero local juntos, sin separar --
-    // los codigos de area argentinos varian de 2 a 4 digitos, no hay forma
-    // confiable de partirlos sin una tabla de prefijos). Va completo a la
-    // columna "Telefono Codigo Area" (el titulo de esa columna se puede
-    // renombrar en el sheet sin volver a deployar); "Telefono 3" queda vacio.
+    // Telefono: phonePrefix es el codigo de pais (ej: "54") y phoneNumber es TODO lo
+    // que sigue (codigo de area + numero local juntos, sin separar -- los codigos de
+    // area argentinos varian de 2 a 4 digitos, no hay forma confiable de partirlos sin
+    // una tabla de prefijos). Va completo a "Telefono 3"; "Telefono Codigo Area" queda vacio.
     sheet.appendRow([
       data['_dp_string197389'] || '', // DB_Tipo de Documento
       data['_dp_string219707'] || '', // DB_Nro. de documento
@@ -49,8 +47,8 @@ function doPost(e) {
       '',                              // Provincia DP (sin dato de origen)
       '',                              // Ciudad DP (sin dato de origen)
       data['phonePrefix']      || '', // Pais Telefono (codigo de pais)
-      data['phoneNumber']      || '', // Telefono Codigo Area (codigo de area + numero local, sin separar)
-      '',                              // Telefono 3 (sin dato de origen)
+      '',                              // Telefono Codigo Area (no se puede separar de forma confiable)
+      data['phoneNumber']      || '', // Telefono 3 (codigo de area + numero local, sin separar)
       '',                              // Producto Nombre (sin dato de origen)
       '',                              // ID. (sin dato de origen)
       data['utm_source']       || '',
@@ -63,11 +61,11 @@ function doPost(e) {
       '',                              // Plantilla auto respuesta (sin dato de origen)
       '',                              // Derivar a (sin dato de origen)
       '',                              // Derivar a cola (sin dato de origen)
-      data['_dp_string219310'] || '', // Nivel de estudios
+      data['_dp_string219310'] || '', // Formacion academica (nivel de estudios)
       data['_dp_string18650']  || '', // Cargo
-      data['_dp_string35228']  || '', // Area
-      data['LeadScore']        || 0,  // LeadScore
-      data['LeadValue']        || 0   // LeadValue
+      data['_dp_string35228']  || '', // Area practica
+      data['LeadScore']        || 0,  // Score
+      data['LeadValue']        || 0   // Value
     ]);
 
     return ContentService
