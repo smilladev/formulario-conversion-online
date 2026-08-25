@@ -27,9 +27,15 @@ function doPost(e) {
     // Plantilla auto respuesta | Derivar a | Derivar a cola
     // + columnas nuevas al final: Nivel de estudios | Cargo | Area | LeadScore | LeadValue
     //
-    // Provincia DP, Ciudad DP, Telefono Codigo Area, Telefono 3, Producto Nombre, ID.,
-    // campaniaid, Canal, Plantilla auto respuesta, Derivar a y Derivar a cola no tienen
-    // un campo de origen en el form/formData todavia -> quedan vacias a proposito.
+    // Provincia DP, Ciudad DP, Producto Nombre, ID., campaniaid, Canal,
+    // Plantilla auto respuesta, Derivar a y Derivar a cola no tienen un campo
+    // de origen en el form/formData todavia -> quedan vacias a proposito.
+    //
+    // Telefono: phonePrefix es el codigo de pais (ej: "54") y phoneNumber es
+    // TODO lo que sigue (codigo de area + numero local juntos, sin separar --
+    // los codigos de area argentinos varian de 2 a 4 digitos, no hay forma
+    // confiable de partirlos sin una tabla de prefijos). Va completo a
+    // "Telefono 3"; "Telefono Codigo Area" queda vacio.
     sheet.appendRow([
       data['_dp_string197389'] || '', // DB_Tipo de Documento
       data['_dp_string219707'] || '', // DB_Nro. de documento
@@ -42,8 +48,8 @@ function doPost(e) {
       '',                              // Provincia DP (sin dato de origen)
       '',                              // Ciudad DP (sin dato de origen)
       data['phonePrefix']      || '', // Pais Telefono (codigo de pais)
-      '',                              // Telefono Codigo Area (sin dato de origen)
-      '',                              // Telefono 3 (sin dato de origen)
+      '',                              // Telefono Codigo Area (no se puede separar de forma confiable)
+      data['phoneNumber']      || '', // Telefono 3 (codigo de area + numero local, sin separar)
       '',                              // Producto Nombre (sin dato de origen)
       '',                              // ID. (sin dato de origen)
       data['utm_source']       || '',
