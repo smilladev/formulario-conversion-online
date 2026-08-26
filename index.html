@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="https://cdn.fromdoppler.com/formgenerator/latest/styles.css?67493465" />
 
   <script>
-    console.log('🚀 IAE Formulario v4.5 — 2026-08-24 — update: nueva URL del webhook de Apps Script (deployment actualizado con el fix de telefono)');
+    console.log('🚀 IAE Formulario v4.8 — 2026-08-24 — fix: la red de seguridad de campos vacios ahora tambien cubre Telefono (type=tel)');
 
     // ============================================================
     // 1. PERSISTENCIA DE CLICK IDs Y UTMs EN sessionStorage
@@ -189,8 +189,40 @@
         // Si falta o está mal completado algún campo required del form
         // (Doppler puede disparar el submit sin pasar por la validación
         // nativa del navegador), no se envía nada ni a GTM ni a Sheets.
-        if (!form.checkValidity()) {
-          console.warn('⛔ Formulario incompleto o inválido — no se envía a GTM ni a Sheets.');
+        //
+        // Doppler además tiene su propia validación de formato (ej: email,
+        // teléfono) independiente del required nativo — algunos campos los
+        // renderiza como type="text" sin pattern, así que checkValidity()
+        // sola no la detecta. Cuando falla, Doppler le agrega la clase
+        // "error" al input/select y crea un <label class="error"> con el
+        // mensaje. Ese label queda con la clase "error" aunque el campo ya
+        // esté corregido (solo lo oculta con display:none), por eso NO hay
+        // que mirar cualquier ".error" del form — solo si el campo en sí
+        // (input/select/textarea) todavía tiene la clase.
+        const dopplerFieldErrors = form.querySelectorAll('input.error, select.error, textarea.error');
+
+        // Refuerzo extra: ademas del required nativo, se chequea a mano que
+        // ningun campo de texto libre (nombre, apellido, email, telefono,
+        // fecha, numero de documento) quede vacio o solo con espacios. Esto
+        // ya deberia estar cubierto por required + checkValidity(), pero
+        // queda como red de seguridad por si Doppler cambia algun campo y
+        // deja de marcarlo required. Telefono es type="tel", el resto es
+        // type="text" -- se incluyen ambos.
+        // OJO: Doppler tiene inputs type="text" decorativos con name=""
+        // (muestran el texto elegido al lado de cada select) que siempre
+        // estan vacios -- se excluyen por name vacio para no bloquear todo.
+        const emptyTextFields = Array.from(form.querySelectorAll('input[type="text"], input[type="tel"]')).filter(function (el) {
+          return el.name && (!el.value || !el.value.trim());
+        });
+
+        if (!form.checkValidity() || dopplerFieldErrors.length > 0 || emptyTextFields.length > 0) {
+          console.warn('⛔ Formulario incompleto o inválido — no se envía a GTM ni a Sheets.',
+            dopplerFieldErrors.length > 0
+              ? 'Campos marcados por Doppler: ' + Array.from(dopplerFieldErrors).map(function (f) { return f.name; }).join(', ')
+              : '',
+            emptyTextFields.length > 0
+              ? 'Campos de texto vacíos: ' + emptyTextFields.map(function (f) { return f.name; }).join(', ')
+              : '');
           if (typeof form.reportValidity === 'function') form.reportValidity();
           return;
         }
