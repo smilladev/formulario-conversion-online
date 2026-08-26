@@ -25,7 +25,7 @@ function doPost(e) {
     // Pais Telefono | Telefono Codigo Area | Telefono 3 | Producto Nombre | ID. |
     // utm_source | utm_medium | utm_content | utm_term | utm_campaign | campaniaid | Canal |
     // Plantilla auto respuesta | Derivar a | Derivar a cola
-    // + columnas nuevas al final: Formacion academica | Cargo | Area practica | Score | Value
+    // + columnas nuevas al final: Formacion academica | Cargo | Area practica | Score | Value | Timestamp
     //
     // Provincia DP, Ciudad DP, Telefono Codigo Area, Producto Nombre, ID., campaniaid,
     // Canal, Plantilla auto respuesta, Derivar a y Derivar a cola no tienen un campo
@@ -65,7 +65,8 @@ function doPost(e) {
       data['_dp_string18650']  || '', // Cargo
       data['_dp_string35228']  || '', // Area practica
       data['LeadScore']        || 0,  // Score
-      data['LeadValue']        || 0   // Value
+      data['LeadValue']        || 0,  // Value
+      data['timestamp'] || Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'dd/MM/yyyy HH:mm:ss') // Timestamp
     ]);
 
     return ContentService
