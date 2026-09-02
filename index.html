@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="https://cdn.fromdoppler.com/formgenerator/latest/styles.css?67493465" />
 
   <script>
-    console.log('🚀 IAE Formulario v4.9 — 2026-08-24 — update: se agrega timestamp (hora Argentina) al payload que llega al Sheet');
+    console.log('🚀 IAE Formulario v5.0 — 2026-09-02 — update: Cargo y Area en 0 ahora dan 1 (menos leads descalificados), nuevo valor base 48.29');
 
     // ============================================================
     // 1. PERSISTENCIA DE CLICK IDs Y UTMs EN sessionStorage
@@ -253,13 +253,13 @@
         };
 
         const cargoScoring = {
-          "Académico": 0,
+          "Académico": 1,
           "Analista": 2,
           "Asesor/Consultor": 2,
           "Asistente / Administrativo": 2,
-          "Auditor": 0,
+          "Auditor": 1,
           "Coordinador / Supervisor": 9,
-          "Desocupado": 0,
+          "Desocupado": 1,
           "Director de Área": 9,
           "Director en Directorio": 4,
           "Director General": 10,
@@ -267,7 +267,7 @@
           "Ejecutivo Comercial / KAM / Ventas": 9,
           "Emprendedor": 2,
           "Especialista (en relación de dependencia: abogado, ingeniero, programador, diseñador...)": 1,
-          "Funcionario Público": 0,
+          "Funcionario Público": 1,
           "Gerente de Área": 10,
           "Gerente General / CEO": 9,
           "Jefe de Área / Departamento": 2,
@@ -279,34 +279,35 @@
         };
 
         const areaScoring = {
-          "Académico / Formación": 0,
+          "Académico / Formación": 1,
           "Administración & Finanzas": 9,
-          "Calidad / Seguridad / Medio Ambiente (HSE)": 0,
+          "Calidad / Seguridad / Medio Ambiente (HSE)": 1,
           "Comercial / Ventas / Customer Experience": 10,
           "Control de Gestión / Auditoría": 7,
-          "Data & Analytics / Transformación Digital": 0,
+          "Data & Analytics / Transformación Digital": 1,
           "Dirección General / Alta Gerencia": 6,
-          "Investigación & Desarrollo (I+D)": 0,
-          "Legal & Compliance": 0,
+          "Investigación & Desarrollo (I+D)": 1,
+          "Legal & Compliance": 1,
           "Marketing & Comunicación": 9,
           "Operaciones / Supply Chain": 1,
-          "Otros": 0,
-          "Planeamiento Estratégico / Desarrollo de Negocios": 0,
-          "Producto & Innovación": 0,
-          "Proyectos & Ingeniería": 0,
+          "Otros": 1,
+          "Planeamiento Estratégico / Desarrollo de Negocios": 1,
+          "Producto & Innovación": 1,
+          "Proyectos & Ingeniería": 1,
           "Recursos Humanos": 3,
-          "Relaciones Institucionales / Comunicación Externa": 0,
-          "Salud / Servicios Médicos": 0,
-          "Sustentabilidad, ESG & Responsabilidad Social": 0,
+          "Relaciones Institucionales / Comunicación Externa": 1,
+          "Salud / Servicios Médicos": 1,
+          "Sustentabilidad, ESG & Responsabilidad Social": 1,
           "Tecnología / Sistemas": 3
         };
 
         // Pesos por dimensión (pts → score %, usd → lead value)
         // Industria queda oculta y sin peso (no participa del scoring)
+        // Valor base del programa: (3380000/1500 * 0.3) / 14 = 48.2857...
         const PESOS = {
-          estudios: { pts: 17, usd: 8.16 },
-          cargo:    { pts: 33, usd: 15.84 },
-          area:     { pts: 50, usd: 24    }
+          estudios: { pts: 17, usd: 8.21 },
+          cargo:    { pts: 33, usd: 15.93 },
+          area:     { pts: 50, usd: 24.14 }
         };
 
         // Capturar todos los campos del formulario
